@@ -1,0 +1,17 @@
+.DS_Store
+video/
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.gz
+*.log
+*.pdf
+*.sublime-project
+*.sublime-workspace
+*.toc
+*.slxc
+*.autosave
+slprj/
+.DS_Store
