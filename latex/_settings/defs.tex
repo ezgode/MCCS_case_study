@@ -1,0 +1,41 @@
+\def \posSym		{p}
+\def \xPos 			{\posSym_x}
+\def \dxPos 		{\dot{\posSym}_x}
+\def \yPos 			{\posSym_y}
+\def \dyPos 		{\dot{\posSym}_y}
+\def \pathCoor 		{s}
+\def \dpathCoor 	{\dot{\pathCoor}}
+\def \speed 		{v}
+\def \speedRef 		{v_r}
+\def \accRef 		{\acc_r}
+
+\def \dspeed 		{\dot{\speed}}
+\def \carLength 	{L}
+\def \steering 		{\phi}
+\def \dsteering 	{\dot{\steering}}
+\def \steeringRef 	{\phi_r}
+\def \steerDyn 		{\sigma_s}
+\def \accDyn 		{\sigma_a}
+\def \acc 			{a}
+\def \distToPath	{d}
+\def \ddistToPath 	{\dot{\distToPath}}
+\def \yaw 			{\theta}
+\def \dyaw	 		{\dot{\yaw}}
+\def \yawErr		{\theta_e}
+\def \dyawErr 		{\dot{\yawErr}}
+\def \curv 			{\kappa}
+\def \curvature		{\kappa(\pathCoor)}
+%
+\def \state			{x}
+\def \control 		{u}
+%
+\newcommand{\wstat}[1]{\overline{\state}_#1}
+\newcommand{\devstat}[1]{\tilde{\state}_#1}
+\newcommand{\dwstat}[1]{\dot{\overline{\state}}_#1}
+\newcommand{\stat}[1]{\state_#1}
+\newcommand{\dstat}[1]{\dot{\state}_#1}
+\newcommand{\wcon}[1]{\overline{\control}_#1}
+\newcommand{\devcon}[1]{\tilde{\control}_#1}
+\newcommand{\con}[1]{\control_#1}
+\newcommand{\dcon}[1]{\dot{\control}_#1}
+\newcommand{\der}[2]{\frac{\partial f_{#1}}{\partial #2}}
