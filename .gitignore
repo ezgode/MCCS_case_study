@@ -13,5 +13,6 @@ video/
 *.toc
 *.slxc
 *.autosave
+*.zip
 slprj/
 .DS_Store
