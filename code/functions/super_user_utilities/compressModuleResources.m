@@ -1,4 +1,4 @@
-function compressModuleResourcess
+function compressModuleResources
     %
     root = [pwd,'/'];
     %
