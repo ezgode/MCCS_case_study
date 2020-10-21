@@ -1,0 +1,19 @@
+%!TEX output_directory = /Users/ezequiel/thesis/_auxFiles/
+\documentclass[final,10pt]{report}
+% \documentclass[final,9pt,5p]{article}
+\include{./_settings/packages}
+\include{./_settings/defs}
+%
+\newcommand{\provFile}[2]{
+	\item \texttt{#1}.
+	#2}
+\def\showSolution{0}
+\usepackage{sverb, amsmath, amsfonts, amssymb}
+\begin{document}
+	% \input{./_sections/modeling_exercise.tex}
+	\input{./_sections/cover.tex}
+	\input{./_sections/session0.tex}
+	\input{./_sections/session1.tex}
+	\input{./_sections/session2.tex}
+	% \input{./_sections/session3.tex}
+\end{document}

@@ -1,0 +1,317 @@
+%!TEX root = ../main.tex
+\setcounter{chapter}{0}
+\chapter{Model implementation and simulation}
+\label{ch:implementation}
+
+This exercise focuses on observing and discussing the similarities and differences between the continuous-time non-linear, continuous-time and linear, and discrete-time and linear models of the systems. 
+We \textbf{do not} tackle the control problem yet, but will based the comparison on the differences we observe on the simulation results of each of the three models when a common input sequence (applied in open loop) is used for all of them.
+
+% D
+Throughout the exercise, we must make use of a reference path simply because our vehicle's motion model is formulated w.r.t. one and thus it is a required step to simulate the vehicle's motion. 
+Nonetheless, don't let the existence of a reference path confuse you.
+The reference path is considered for implementation purposes, but, strictly speaking, \textbf{we are not tackling the control problem (i.e. path tracking) yet}. 
+
+The proposed exercises aim to drive you through (i) the implementation of the models in Simulink, (ii) the application of control sequences in open loop, (iii) and the discussion of the observed differences. 
+%
+\section{Provided files}
+\begin{itemize}
+	\setlength\itemsep{0em}
+	\item \texttt{open\_loop\_experiments.slx}.
+		A Simulink file with some of the blocks needed to implement and simulate the models. 
+		In this file you will implement the continuous time non-linear model, continuous time linear model, and discrete time linear model. 
+	\item \texttt{ex1.m}.
+		A class whose methods have to be completed.
+		A description of every function to be completed is included within the file.
+	\item \texttt{exercise1\_Linearization.m}.
+		A Matlab script that sets up and runs the required simulations.
+		Modify its content only if you want to run other experiments in addition to the ones proposed.
+	\item \texttt{utilities.m}.
+		A class that gathers auxiliary functions that will be used in the scripts provided during the case study sessions.
+		There is no need to reviewing its content.
+	\item \texttt{circle, path\_1, path\_2, path\_3}  mat files containing different paths to track that can be used in the experiments.
+\end{itemize}		
+%
+\section{Exercises}
+	\begin{enumerate}
+		\setlength\itemsep{0em}
+		\item Complete the method \texttt{getSystemParameters} in \texttt{ex1.m} so that it returns a \textbf{column vector} containing, in the shown order, the parameters of the system: %
+		$\curvature = 1e^{-10}$, %
+		$\carLength = 4$, %
+		$\accDyn = 1$, %
+		$\steerDyn = 5$,
+		$\speed_{ref}=5$.
+		\item Complete the method \texttt{getWorkingTrajectory} which should return the nominal trajectories of the control inputs and states (i.e. the signals $\bar{\mathbf{u}}(t)$ and $\bar{\mathbf{x}}(t)$ you calculated in Session \ref{ch:modeling}) in a format compatible with the Simulink block \texttt{from-workspace}. 
+		
+		\note{
+			You can always find additional information regarding Simulink blocks and their configuration options by double-clicking on the Simulink block of interest. 
+		}
+
+		\item Complete the method \texttt{getLinealModelArrays} in \texttt{ex1.m} which should return the matrices %
+		$A,B,C,D$ %
+		you calculated in Session \ref{ch:modeling}.
+
+
+		%
+		\item Complete the method \texttt{getDiscreteLinearModel} which should return the matrices %
+		$\Phi, \Gamma$ %
+		describing the discrete-time linear model of the system and calculated following two different methods: Euler approximation (which you should have solved in Session \ref{ch:modeling}), and using the Matlab command \texttt{c2d}.
+
+		\note{
+		Optionally, if time allows, you could as well implement the method based on the Taylor-series approximation of the exponential matrix (that is using the auxiliary array $\Psi$ as described in section 2.2.) and compare it with the results of the two other methods mentioned above. }
+		%
+		\item Implement the system's non-linear model using the block \texttt{Non linear model - continuous time} in the Simulink file. 
+
+		\note{Remember that the inputs of Simulink blocks are generally referred as \texttt{u()}. Thus, if you include the system's control input $u_i$ as the n-th input of a Simulink block, you would have the signal $u_i$ available in $u(n)$.}
+		
+
+		\note{The curvature of the path %
+		$\kappa$ %
+		in the equations must be taken from the \texttt{u(8)} (which contains the curvature of the reference path given the value of $\state_1$) instead of using the corresponding fixed parameter.
+		This is due to the fact that, even though we build the model considering a path of constant curvature we could use paths with more general geometry, and consider the curvature to remain constant during the short simulation time steps.}
+		
+		\item Complete the Simulink diagram so that it applies the same sequence of control inputs to the three models of the system. 
+		
+		\note{
+		The sequence of control inputs and states you receive and send through the \emph{from/to workspace} blocks must be the real ones (i.e. %
+		$\mathbf{u}(t)$ %
+		and %
+		$\mathbf{x}(t)$) %
+		but the linear models require %
+		$\tilde{u}$ %
+		and return %
+		$\tilde{x}$ %
+		so you should transform them before they reach the linear models or sent to the workspace for further analysis. }
+
+		\note{
+		To make a fair comparison between the continuous-time and discrete-time linear models, you must use the \texttt{zoh} blocks to guarantee that both linear models are receiveing the exact same (sampled) input signal. }
+
+		\note{
+		Also keep in mind that Simulink can access all the variables in the workspace at the time the simulation is triggered.
+		}
+
+		\item Complete the method \texttt{getInitialState} which should return the initial state %
+		$x(0)$ %
+		of the system and the corresponding initial state %
+		$\tilde{x}(0)$ %
+		of the linear models. 
+
+		\note{
+		You are free to choose the system's initial state, but you could start using the value 
+		$x(0) = [0,0,0,\bar{x}_4(t_0),\bar{x}_5(t_0)]$.}
+
+		\item Complete the method \texttt{getOpenLoopInputSignal} which should return the sequence of inputs to be applied in open loop in a format that is compatible with the \emph{from-workspace} Simulink blocks.
+		The input sequences should be designed so that you are able to observe the differences between models.
+		You should come up with, at least, two input sequences:
+		\begin{enumerate}
+			\item one that makes the simulated motions look the same for the three models, 
+			\item one where differences among the three models can be observed.
+		\end{enumerate}		
+	\end{enumerate}	
+
+\section{Questions}
+Once the steps above have been completed, please answer the following questions. 
+	\begin{enumerate}
+		\setlength\itemsep{0em}
+		\item Provide the arrays $\Phi$ and $\Gamma$ obtained using the Euler approximation method and the Matlab command \texttt{c2d}.
+		\item Provide a screenshot of your implementation of the \texttt{Non linear model - continuous time} block.
+		\item Provide a screenshot of the block diagram implemented in \texttt{open\_loop\_experiments.slx}.
+		\item Report the simulation results, including the information concerning the initial state you used, the sequence of inputs you applied, and the simulated results. 
+		\item Does the linear model resemble sufficiently well the behavior obtained from the non-liner model? Why?
+		\item Do the results obtained using the discrete-time linear model resemble those obtained by the continuous-time linear model?
+		What is then interesting about using the discrete-time linear model instead of the continuous-time linear model to design control strategies?  
+	\end{enumerate}
+
+			\if\showSolution1
+				\ \newline
+				\noindent\fcolorbox{matColor}{matColor}{
+					\begin{minipage}{\textwidth}
+						\scriptsize
+						%
+						In this section we discuss how to obtain $\overline{\mathbf{\state}}(t)$, which will allow us to linearize the system (that is, expressing the dynamic model in terms of the incremental states $\tilde{\mathbf{\state}}(t) = \overline{\mathbf{\state}}(t) - \mathbf{\state}(t)$.\par
+						%
+						Notice that, aiming at perfectly tracking the given path at a constant speed, the next quantities can be derived by definition:
+						\begin{align}
+							\wstat{1}(t) & = \speedRef t \rightarrow \dwstat{1} = \speedRef \label{eq:ws1}\\
+							\wstat{2}(t) & = 0 \label{eq:ws2}\\
+							\wstat{3}(t) & = 0 \label{eq:ws3}\\
+							\wstat{4}(t) & = \speedRef \rightarrow \dwstat{4} = 0 \label{eq:ws4}\\
+							\dwstat{5}(t) & = 0
+						\end{align}
+						%
+						From \eqref{eq:ss3}, \eqref{eq:ws3} and \eqref{eq:ws1}, the next follows: 
+						\begin{align}
+							0 & = \frac{\wstat{4}}{\carLength}\tan(\wstat{5}) - \curv(\wstat{1})\dwstat{1} \nonumber =\\
+							  & = \frac{\speedRef}{\carLength}\tan(\wstat{5}) - \curv(\speedRef t)\speedRef
+						\end{align}
+						that is 
+						%
+						\begin{equation}
+							\wstat{5}(t) = \arctan( \curv(\speedRef t)\carLength ) \label{eq:ws5}
+						\end{equation}
+						Finally, the control input trajectory can be easily derived from \eqref{eq:ss4} and \eqref{eq:ss5}, together with \eqref{eq:ws4} and \eqref{eq:ws5}.
+						\begin{align}
+							\wcon{1}(t) & = \wstat{4} \\
+							\wcon{2}(t) & = \wstat{5}
+						\end{align}
+						Notice that in the previous derivation, the curvature of the represents an important source of potential non-linearities. 
+						Hence, for the sake of simplicity, we will consider from now on \emph{constant-curvature} paths.\par
+						%
+						%Moreover, the states representing the global position 
+						% \begin{align}
+						% 	\dwstat{3}(t) & = \frac{\wstat{7}(t)}{\carLength}\tan(\wstat{8}(t)) = \frac{\speedRef}{\carLength} \curv\carLength \to \wstat{3}(t) = \speedRef \curv t \\
+						% 	%
+						% 	\dwstat{1}(t) & = \wstat{7}(t)\cos(\wstat{3}(t)) = \speedRef \cos(\speedRef \curv t ) \to \wstat{1}(t) = \frac{\sin(\speedRef \curv t )}{\curv} \\
+						% 	\dwstat{2}(t) & = \wstat{7}(t)\cos(\wstat{3}(t)) = \speedRef \sin(\speedRef \curv t ) \to \wstat{2}(t) = -\frac{\cos(\speedRef \curv t )}{\curv}
+						% \end{align}
+						Considering the previous simplification and \eqref{eq:ws1}\textendash\eqref{eq:ws8}As a result, the working state trajectory previously derived can be written as: 
+						\begin{align}
+							%\wstat{1}(t) & = \frac{\sin(\speedRef \curv t )}{\curv} + \wstat{1}(0)\\
+							%\wstat{2}(t) & = -\frac{\cos(\speedRef \curv t )}{\curv} + \wstat{2}(0)\\
+							%\wstat{3}(t) & = \speedRef \curv t + \wstat{3}(0)\\
+							%
+							\wstat{1}(t) & = \speedRef t 					\label{eq:wss1}\\
+							\wstat{2}(t) & = 0 								\label{eq:wss2}\\
+							\wstat{3}(t) & = 0 								\label{eq:wss3}\\
+							\wstat{4}(t) & = \speedRef 						\label{eq:wss4}\\
+							\wstat{5}(t) & = \arctan( \curv \carLength ),    \label{eq:wss5}
+						\end{align}
+						%
+						and the control input reference as 
+						\begin{align}
+							\wcon{1}(t) & = \wstat{4} = \speedRef\label{eq:wc1}\\
+							\wcon{2}(t) & = \wstat{5} = \arctan( \curv \carLength )\label{eq:wc2}
+						\end{align}
+					\end{minipage}
+				}
+			\fi	
+			\if\showSolution1
+				\scriptsize
+				\ \newline\noindent\fcolorbox{matColor}{matColor}{
+					\begin{minipage}{\textwidth}
+						The relevant derivatives to linearize the systems are:
+						\begin{align}
+							%& \der{1}{\stat{3}} = -\stat{7}\sin(\stat{3}),%
+							%	\quad \der{1}{\stat{7}} = \cos(\stat{3})\\
+							%
+							%& \der{2}{\stat{3}} = \stat{7}\cos(\stat{3}),%
+							%	\quad \der{1}{\stat{7}} = \sin(\stat{3})\\
+							%
+							%& \der{3}{\stat{7}} = \frac{\tan(\stat{5})}{\carLength},%
+							%	\quad \der{3}{\stat{5}} = \frac{\stat{7}}{\carLength\cos^2(\stat{5})}\\
+							%
+							& \der{1}{\stat{2}} = \frac{\stat{4}\curv\cos(\stat{3})}{(1-\curv\stat{2})^2},%
+								\quad \der{1}{\stat{3}} = -\frac{\stat{4}\sin(\stat{3})}{1-\stat{2}\curv}%
+								\quad \der{1}{\stat{4}} = \frac{\cos(\stat{3})}{1-\stat{2}\curv} \\
+							%
+							& \der{2}{\stat{3}} = \stat{4}\cos(\stat{3}),\quad \der{2}{\stat{4}} = \sin(\stat{3})\\
+							%
+							& \der{3}{\stat{2}} = -\frac{\curv^2\stat{4}\cos(\stat{3})}{(\curv\stat{2}-1)^2}, \quad \der{3}{\stat{3}} = -\frac{\curv\stat{4}\sin(\stat{3})}{\curv\stat{2} - 1}, \quad \der{3}{\stat{4}} = \frac{\tan(\stat{5})}{\carLength} -\frac{\curv\cos(\stat{3})}{1-\stat{2}\curv}, \quad \der{3}{\stat{5}} = \frac{\stat{4}}{\carLength\cos^2(\stat{5})}\\
+							%
+							& \der{4}{\stat{4}} = -\accDyn,\quad \der{4}{\con{2}} = \accDyn\\
+							%
+							& \der{5}{\stat{5}} = -\steerDyn,\quad \der{4}{\con{1}} = \steerDyn
+						\end{align}
+						%
+						With this derivatives, and applying the Taylor expansion series, we can rewrite the set of dynamic equations in terms of deviations w.r.t. the nominal trajectory.
+						%
+						\begin{equation}
+							\dot{\tilde{\mathbf{\state}}} = A \tilde{\mathbf{\state}} + B \tilde{\mathbf{\control}}
+						\end{equation}
+						%
+						with
+						%
+						\begin{align}
+							A &= \begin{bmatrix}
+								%0 & 0 & 0 & 0 & \speedRef\curv & 0 & 1 & 0 \\ 
+								%0 & 0 & 0 & 0 & \speedRef\curv & 0 & 1 & 0 \\ 
+								%0 & 0 & 0 & 0 & \speedRef\curv & 0 & 1 & 0 \\ 
+								%
+								0 & \speedRef\curv & 0 & 1 & 0 \\ 
+								0 & 0 & \speedRef & 0 & 0 \\ 
+								0 & -\curv^2\speedRef & 0 & 0 & \frac{\speedRef(1+\curv^2\carLength^2)}{\carLength} \\ 
+								0 & 0 & 0 & -\accDyn & 0 \\ 
+								0 & 0 & 0 & 0 & -\steerDyn
+							\end{bmatrix}\\
+							%
+							B & = \begin{bmatrix}
+								0 & 0 \\
+								0 & 0 \\
+								0 & 0 \\
+								0 & \accDyn \\
+								\steerDyn & 0 
+							\end{bmatrix}
+						\end{align}
+					\end{minipage}
+					%
+				}
+			\fi
+
+
+% 	\subsection{Nominal trajectory}
+% 		To linearize the system given the state space vector defined in \eqref{eq:stateVector}, we need to calculate a nominal trajectory [section 3.1.1.], due to the fact that the nominal situation in our case would be having the vehicle perfectly following the path.
+% 		Remember that we are assuming that the path is parametrized with respect to the path coordinate $\pathCoor = \stat{5}$, and the curvature is expressed as $\curvature$. 
+% 		Moreover, in this exercise we will assume that all the states can me measured.\par
+% 		%
+% 		\paragraph{To do:}
+% 		\begin{itemize}
+% 			\setlength\itemsep{0em}
+% 			\item Set the parameters of the system to $\curvature = 0.04$, $\carLength = 4$, $\accDyn = 0.7$, $\steerDyn = 0.5$, $\speed_n = 13$. 
+% 			\item Obtain the nominal trajectory ($\overline{\mathbf{\state}}(t)$ and $\overline{\mathbf{\control}}(t)$) of the system knowing that we aim at perfectly tracking the path ($\ddistToPath = 0, \distToPath = 0, \dyawErr = 0, \yawErr = 0$) with a constant longitudinal speed $\speed_n$, and that the path curvature is assumed to be constant (i.e. the path to be followed will be a circle).
+% 		\end{itemize}	
+% 		\paragraph{To report:}  
+% 		\begin{itemize}
+% 			\setlength\itemsep{0em} 
+% 			\item[1)] Final expression of the nominal trajectory. 
+
+
+% 		\end{itemize}						
+% 		%
+% 		%
+% 	\subsection{Linear state space representation}
+% 		\paragraph{To do:} 
+% 		\begin{itemize}
+% 			\setlength\itemsep{0em}
+% 			\item Linearize the system and calculate $A$ and $B$.\par
+% 		\end{itemize}	
+% 		\paragraph{To report:} 
+% 		\begin{itemize}
+% 			\setlength\itemsep{0em}
+% 			\item[2)] The analytical form of the matrices $A$ and $B$.\par
+
+% 		\end{itemize}			
+% 		%
+% 	\subsection{Discrete state space representation}
+% 	 	\paragraph{To do:}
+% 		\begin{itemize}
+% 			\setlength\itemsep{0em}
+% 			\item Calculate the discrete representation of the system using Euler approximation. 
+% 			\item Calculate the discrete representation of the system programmatically as explained in Section 2.2.
+% 			\item Calculate the discrete representation of the system using Matlab functions. 
+% 		\end{itemize}
+% 		\paragraph{To report:} 
+% 		\begin{itemize}
+% 			\setlength\itemsep{0em}
+% 			\item[3)] The analytical discrete representation using Euler approximation. 
+% 			\item[4)] The numerical differences between the matrices obtained with the three different approaches. 
+% 		\end{itemize}
+% %
+% 	\subsection{Simulation}
+% 		\paragraph{To do:} 
+% 		\begin{itemize}
+% 			\setlength\itemsep{0em}
+% 			\item Complete the Simulink diagram in order to run simulations where a specific control sequence $\control(t)$ is applied in open loop to the three versions of the system.
+% 			\item Generate the nominal trajectory.  
+% 			\item Set initial conditions for $\state$, and $\tilde{\state}$.
+% 			\item Generate a control sequence to be applied in open loop. 
+% 			\item Now, change the curvature to $0.01$ keeping everything else as in the previous set of experiments.
+% 				What do you observe? Considering that you still applying the same sequence of control actions (in open loop) are the simulated trajectories equal to the case where $\curv = 0$? How do you explain it?
+% 		\end{itemize}	
+% 		\paragraph{To report:} 
+% 		\begin{itemize}
+% 			\setlength\itemsep{0em}
+% 			\item[5)] Screenshot of the final Simulink scheme. 
+% 			\item[6)] Simulation results.
+% 			\item[7)] Comment the differences you observe. 
+% 					  Are the results what you were expecting? 
+% 					  Which are the consequences of linearizing the system? 
+% 		\end{itemize}		

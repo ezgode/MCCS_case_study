@@ -1,0 +1,66 @@
+#!/bin/bash
+
+function rm_aux_files() {
+	if [ -d "./._aux_files" ]
+	then 
+		rm -rf "./._aux_files/"
+	fi
+	rm -rf ./_imags/._pdf/
+}
+
+function mv_aux_files() {
+	if [ ! -d "./._aux_files" ]
+	then
+		mkdir "./._aux_files"
+	fi
+	if [ ! -d "./_imags/._pdf" ]
+	then
+		mkdir "./_imags/._pdf"
+	fi
+
+	for f in "main.aux" "main.bbl" "main.bbl" "main.synctex.gz" "main.blg" "main.fdb_latexmk" "main.fls" "main.log" "main.dvi" "main.out" "main.toc"
+	do
+		if [ -f $f ]
+		then	
+			mv $f "./._aux_files/"$f
+		fi
+	done
+
+	mv ./_imags/*to.pdf ./_imags/._pdf/
+}
+function mv_pdf_file() {
+	cp './main.pdf' '/Users/ezequiel/Google Drive/eTrolley/_docs/00-00-00_assistance_strategy/assistance_strategy.pdf'
+}
+
+function mv_aux_back_files() {
+	for f in "main.aux" "main.bbl" "main.bbl" "main.synctex.gz" "main.blg" "main.fdb_latexmk" "main.fls" "main.log" "main.dvi" "main.out" "main.toc"
+	do
+		if [ -f "./._aux_files/"$f ]
+		then	
+			mv "./._aux_files/"$f "./"$f
+		fi
+	done
+	mv ./_imags/._pdf/*to.pdf ./_imags/
+}
+
+if [ "$1" == "rm" ]
+then
+	rm_aux_files
+elif [ "$1" == "full" ]
+then 
+	pdflatex main
+	bibtex main
+	pdflatex main
+	pdflatex main
+	mv_aux_files
+	mv_pdf_file
+else
+	mv_aux_back_files
+	pdflatex main
+	mv_aux_files
+fi
+
+if [ "$2" == 1 ]
+then
+	open -a skim main.pdf
+fi

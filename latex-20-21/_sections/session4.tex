@@ -1,0 +1,56 @@
+%!TEX root = ../main.tex
+\setcounter{chapter}{3}
+\chapter{Navigation Function}
+In this exercise we will make use of a potential function-based approach to address the path-planning problem. 
+Potential functions are an intuitive way of designing non-linear control/planning strategies which, although formally guaranteeing its convergence properties might represent a major challenge, is a very powerful approach in practice.
+In fact, proportional controllers (as for instance LQR controllers) could be seen as a particular case of a navigation function where the reference point is the source of the attractive field, which happens to evolve linearly with the distance between the state vector and the reference point.\par
+%
+In this exercise, we will design a potential field 
+%
+\begin{align}
+	\phi(\stat{1},\stat{2}) = - \phi_\text{attractive}(\stat{1},\stat{2}) + \phi_\text{repulsive}(\stat{1},\stat{2}) 
+\end{align}
+%
+which will be then explored to obtain the path to be followed by always following the direction shown by $-\nabla \phi$.
+It has to be noted that, the path planning is going to be performed in the $s$-$d$ configuration space, what makes much easier designing the potential function, as it implicitly encodes the non-linear geometry of the path to be tracked. 
+In fact, in this way, the path-planning strategy is independent of the path to be followed, which is not the case when the potential-field based path planning is performed in cartesian coordinates.  
+\par
+%
+The terms $\phi_\text{repulsive}$ and $\phi_\text{attractive}$ will represent the attractive field (pushing the car forward and towards the center of the lane) and the repulsive field (pushing the car away from the considered obstacle). 
+In particular, we propose Gaussian-functions-based potential fields that take the form:
+%
+\begin{align}
+	\phi_\text{attractive}(\stat{1},\stat{2}) & = a_1 \stat{1} + a_2 e^{ - \frac{\stat{2}^2}{2 a_3^2}} \label{eq:attractive}\\
+	\phi_\text{repulsive}(\stat{1},\stat{2}) & = r_1 e^{ -\left( \frac{ (x_1-s_\text{obstacle})^2 }{2 r_2^2} + \frac{ (x_2-d_\text{obstacle})^2 }{2 r_3^2} \right) } \label{eq:repulsive}
+\end{align}
+
+The terms in the attractive potential field push the car forward and towards the center of the track, while the terms in the repulsive function push the car away from the considered obstacle. 
+In order to smoothly avoid the collision with the obstacle, a 3D Gaussian-shaped function is used in \ref{eq:repulsive} in such a way that the vehicle can feel the repulsive force before reaching the obstacle position. \par
+%
+In this exercise you will only deal with the design of the potential field itself. 
+Methods and tools to generate the path given a certain potential field are given, and therefore do no need to be implemented. 
+%
+\section{Provided files}
+\begin{itemize}
+	\setlength\itemsep{0em}
+	\provFile{ex4.m}{Class whose methods have to be completed. 
+		A brief description of the functions will be provided within this document, whereas more detailed information regarding input and outputs can be found within the matlab file itself.}
+	\provFile{exercise4\_NavigationFunction.m}{Matlab script that sets up and runs the required simulations. 
+		Even though, you are not asked to modify this script, understanding what the file is doing can be helpful to solve the functions.
+		}
+	\provFile{utilities.m}{Class gathering auxiliary functions.
+		This file is updated w.r.t the one provided in previous exercises, and some bugs where fixed. 
+		}
+	\provFile{circle, path\_1, path\_2, path\_3} mat files containing different paths to track that can be used in the experiments.		
+\end{itemize}
+%
+\section{Exercises}
+\begin{itemize}
+	\item Copy your solutions of the methods \texttt{select\_reference\_path}, \texttt{getSystemParameters}, and \texttt{getInitialState} from previous exercises. 
+	\item Complete the method \texttt{getObstaclePosition} which defines the position of the obstacle to be considered by the path-planner. 
+	\item Complete the method \texttt{getAttractiveField} which returns an anonymous function which implements the proposed attractive potential field term. 
+	\item Complete the method \texttt{getRepulsiveField} which returns an anonymous function which implements the proposed repulsive potential field term. 
+	\item Complete the method \texttt{calculateGradient} which makes use of the Matlab function \texttt{gradient} to calculate the gradient of the resulting potential function along the $s$ and $d$ coordinates.
+	\item Obtain results for different paths and position of the obstacles. Could you position the obstacle in a position where a path the reaches the end of the track cannot be found? What is happening in that case? 
+	\item Compare this approach with the dynamic-programming based method by comparing some of their limitations and benefits. 
+\end{itemize}
