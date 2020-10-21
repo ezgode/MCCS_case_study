@@ -26,25 +26,25 @@
 %remark function
 %\newcommand{\remark}[1]{\textbf{Remark \getcurrentref{chapter}.\getcurrentref{section}.\arabic{remarkCnt}}: #1\stepcounter{remarkCnt}}
 \newcommand{\remark}[1]{\textbf{Remark \arabic{remarkCnt}}: #1\stepcounter{remarkCnt}}
-%\titleformat{hcommandi}[hshapei]{hformati}{hlabeli}{hsepi}{hbeforei}[hafter i]
-\titleformat{\chapter}%
-	[hang]%
-	{\large\bfseries}%
-	{%
-		\fcolorbox{titleColor}{titleColor}{%
-			\begin{minipage}{50 pt}%
-				\begin{center}
-				\vspace{10pt}
-				\color{white}{{\large Exercise} \\ \vspace{10 pt}{\Huge\thechapter}}%
-				\end{center}%
-			\end{minipage}%			
-		}%
-		%\colorbox{black}{\color{white}{Session \\ \thechapter}}
-	%\colorbox{black}{\color{white}{\begin{center}Session \thechapter\end{center}}}
-	}%
-	{5pt}%
-	{\setcounter{remarkCnt}{1}\LARGE\bfseries\color{titleColor}}%
-	[]
+
+% \titleformat{\chapter}%
+% 	[hang]%
+% 	{\large\bfseries}%
+% 	{%
+% 		\fcolorbox{titleColor}{titleColor}{%
+% 			\begin{minipage}{50 pt}%
+% 				\begin{center}
+% 				\vspace{10pt}
+% 				\color{white}{{\large Exercise} \\ \vspace{10 pt}{\Huge\thechapter}}%
+% 				\end{center}%
+% 			\end{minipage}%			
+% 		}%
+% 		%\colorbox{black}{\color{white}{Session \\ \thechapter}}
+% 	%\colorbox{black}{\color{white}{\begin{center}Session \thechapter\end{center}}}
+% 	}%
+% 	{5pt}%
+% 	{\setcounter{remarkCnt}{1}\LARGE\bfseries\color{titleColor}}%
+% 	[]
 	
 %	
 \titlespacing*{\chapter}{0pt}{-50pt}{40pt}	

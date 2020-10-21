@@ -1,26 +1,26 @@
 %!TEX root = ../main.tex
 \setcounter{chapter}{1}
 \chapter{Control and observation}
-In this session we will tackle the design of a LQR controller and an observer to address the path tracking problem.
-The main idea is using the discrete-time linear model of the system to design a controller that would then be implemented to control the nonlinear system. 
+In this session we tackle the design of an LQR controller and an observer to address the path tracking problem.
+The main idea is using the discrete-time linear model of the system to design a controller which is implemented to control the nonlinear system. 
 We will explore the usefulness of observers by seeing the effect of measurement noise and non-measurable states on the controller performance, and how the observer helps in those circumstances.\par
 %
 Two Simulink models are going to be implemented in this exercise. 
-In both of them you will implement a LQR closed-control loop, which will be complemented with a state observer in the second one.
+In both of them you will implement an LQR closed-control loop, which will be complemented with a state observer in the second one.
 \section{Provided files}
 \begin{itemize}
 	\setlength\itemsep{0em}
 	\item \texttt{LQR\_closed\_Loop.slx} and \texttt{LQR\_observer.slx}.
-		Simulink files with some of the blocks needed to simulate the system.
-		\texttt{LQR\_closed\_Loop.slx} only implements the LQR-control loop while \texttt{LQR\_observer.slx} will additionally include the state observer.
+		Two Simulink files with some of the blocks needed to simulate the system.
+		In \texttt{LQR\_closed\_Loop.slx} only the LQR-control loop will be implemented while in \texttt{LQR\_observer.slx} a state observer will be as well included. 
 	\item \texttt{ex2.m}.
-		Class whose methods have to be completed.
+		The class whose methods have to be completed.
 		A description of every function to be completed is included within the file.
 	\item \texttt{exercise2\_LQRandObserver.m}.
-		Matlab script that sets up and runs the required simulations.
+		The Matlab script which sets and runs the required simulations.
 		Modify its content only if you want to run other experiments in addition to the ones proposed.
 	\item \texttt{utilities.m}.
-		Class that gathers auxiliary functions that will be used in the scripts provided during the case study sessions.
+		The class which gathers auxiliary functions that will be used in the scripts provided during the case study sessions.
 		There is no need to review its content unless you want to make use of some of the functions included therein.
 	\item \texttt{circle, path\_1, path\_2, path\_3} mat files containing different paths to track that can be used in the experiments.
 \end{itemize}
@@ -29,38 +29,49 @@ In both of them you will implement a LQR closed-control loop, which will be comp
 	\paragraph{LQR Control design and implementation}
 	\begin{itemize}
 		\item Copy the content of functions \texttt{getSystemParameters}, \texttt{getLinealModelArrays}, \newline\texttt{getDiscreteLinearModel}, and \texttt{getWorkingTrajectory} from the previous exercise. 
-		\item Complete the method \texttt{getCostFunctArrays} which returns the matrices $Q_1$ and $Q_2$ defining the cost function of the control problem.
-			  You can freely give values to those matrices, however you must neglect the error of $x_1$.
-			  Could you explain why?
+		%
+		\item Complete the method \texttt{getCostFunctArrays} which returns matrices $Q_1$ and $Q_2$ defining the cost function of the optimal control problem.
+		You can freely give values to those matrices, however you must neglect the error of $x_1$, and we recommend you to strongly penalize $u_2$.
+		Could you explain why?
+		%
 		\item Complete the method \texttt{calculateLQRGain} which implements two different methods to calculate the LQR control gain.
-		\item Complete the method \texttt{select\_reference\_path} which should return the name of the \emph{.mat} file containing the information of the path that is wanted to be tracked.
-		\item Complete the method \texttt{getInitialState} considering the initial state of the system being $x(0) = \left[0,0,0,0,0\right]$.
+		\item Complete the method \texttt{selectReferencePath} which should return the name of the \emph{.mat} file containing the information of the path that is wanted to be tracked.
+		\item Complete the method \texttt{getInitialState} considering the initial state of the system being $x(0) = \left[0,0,0,0,0\right]$ and freely setting the initial state considered by the observer.
 		\item Complete the Simulink diagram \texttt{LQR\_closed\_Loop.slx} implementing the LQR control loop. 
+		Note that the implementation of the non-linear module is not given. You must reuse your implementation from the previous case study exercise. 
 		\item Simulate and observe the performance of the control approach.
-			  Run additional experiments to observe how the values of $Q_1$ and $Q_2$ impact the control performance.
+		Run additional experiments to observe how the values of %
+		$Q_1$ %
+		and %
+		$Q_2$ %
+		impact the control performance.
 	\end{itemize}
 	\paragraph{LQR assessment with imperfect information}
 	\begin{itemize}
 		\item Complete the method \texttt{getNoiseModule} which returns a structure containing the characteristics of the measurement noise. 
-			You can start by implementing a noise of zero mean and standard deviation $(1, 1, 0.1745, 2, 0)$ for states $1$ to $5$. 
-		\item Simulate and observe how the performance changes when the LQR deals with noisy signals.  
-		\item Complete the method \texttt{getCprime} which returns $C'$, a version of the $C$ array that allows to emulate a situation where a certain state is non-measurable. 
-		This matrix must have the same dimensions than $C$ but with the rows affecting the targeted state equal to zero. 
-		The objective is making the value of the output that arrives to the LQR be $\tilde{y}' = C' \tilde{y} = C' \tilde{x}$. 
-		In particular, we will consider that we do not have available information regarding $x_3$. 
-		\item Make sure that in the Simulink diagram, the state information that arrives to the LQR controller is $\tilde{x}' = C' \tilde{x}$.
-		\item Simulate and observe the effect of using the LQR control strategy when one state is missing. 
+		You can start by implementing a noise of zero mean and standard deviation $(.2, .2, .04, .02, .02)$ for states $1$ to $5$. 
+		Note that the value of the standard deviation must be reasonable regarding the expected value of the state they impact.
+		\item Simulate and observe how the performance changes when the LQR deals with noisy signals. 
+		\item Simulate and observe the effect of using the LQR control strategy when the sensor measuring $y_3$ fails.
+		To do so, complete the method \texttt{getWorkingSensor} which returns a vector %
+		$W = (w_1,\cdots, w_5)^T$, where element %
+		$w_i \in \lbrace0,1\rbrace$ %
+		shows whether the sensor associated to the output %
+		$y_i$ %
+		is working.
 	\end{itemize}
 	\paragraph{State observer design and implementation}
 	\begin{itemize}
-		\item Complete the method \texttt{getCArrayConsideringMeasurableStates} which returns a third version of the $C$ array (here referred to as $C_{mes}$) that allows to reduce the state vector by neglecting the states that are considered unmeasurable. 
-		The main difference between this and $C'$ array defined in the previous method is indeed the dimension of the resulting output vector. 
-		Specifically we will consider that $x_3$ cannot be measured.
-		Keep also in mind that the state vector that is expected to be received by the observer should be $\tilde{x}' = C_{mes} C' \tilde{x}$.
-		\item Complete the method \texttt{checkObservability} which returns the number of states that are not observable as a result of the state considered immeasurable. 
+		\item Complete the method \texttt{updateCArray}, which returns a new version of $C$, to set the output as %
+		$y = (x_1, x_2, x_4, x_5)^T$.
+		\item Complete the method \texttt{checkObservability} which returns the number of states that are not observable as a result of the state excluded from the output of the system. 
+		%
 		\item Complete the method \texttt{getObserverGain} calculate the observer gain and implement the observer in Simulink. 
+		Start by setting the poles of the observation loop as the %
+		$90\%$ of the poles of the closed control loop. 
+		%
 		\item Complete the Simulink diagram \texttt{LQR\_observer.slx} which should implement the LQR-control loop with a state observer. 
-		Keep in mind that (i) the LQR controller is fed by the state observer, (ii) that the observer is designed w.r.t. $\tilde{x}$ and $\tilde{u}$, (iii) and that the state vector that arrives to the observer should be $\tilde{x}' = C_{mes} C' \tilde{x}$.
-		\item Simulate the observer and compare the performance with the previous exercise in which the observer was not implemented yet the same state was considered to be immeasurable. 
-		\item Repeat the experiment by making the dynamic of the observer (which depends on the position of the close loop poles) faster/slower and observe the impact on the state prediction and control. 
+		Keep in mind that (i) the LQR controller is fed by the state observer, and (ii) the observer is designed w.r.t. $\tilde{x}$ and $\tilde{u}$.
+		\item Simulate the observer and compare the performance with the previous exercise in which the observer was not implemented, yet the same state was considered to be immeasurable. 
+		\item Repeat the experiment by making the dynamic of the observer (which depends on the position of the close loop poles) faster/slower and observe the impact on the state estimation and control. 
 	\end{itemize} 

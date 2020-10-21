@@ -20,12 +20,10 @@ classdef solEx1
             parameters = zeros(5,1);
             %
             parameters(1) = 1e-10;
-            %parameters(1) = 0.02;
-            %parameters(1) = 0.002;
             parameters(2) = 4;       
-            parameters(3) = 5;
+            parameters(3) = .8;
             parameters(4) = 1;
-            parameters(5) = 3;
+            parameters(5) = 5;
             
             varargout = {parameters};
             
@@ -46,7 +44,7 @@ classdef solEx1
             A(1,4) = 1;
             A(2,3) = parameters(5);
             A(3,2) = -parameters(5)*parameters(1)^2;
-            A(3,5) = parameters(5)*(1+parameters(1)^2*parameters(2)^2)/parameters(2);
+            A(3,5) = parameters(5)*(1+parameters(1)^2*parameters(2)^2)/(16*parameters(2));
             A(4,4) = -parameters(3);
             A(5,5) = -parameters(4);
             %
@@ -75,12 +73,10 @@ classdef solEx1
             % - c2d : use the matlab command c2d. 
             %
             if strcmp(method,'Euler')
-                
                 Phi = (sampling_time*A+eye(5));
                 Gamma = sampling_time*B;   
                 
             elseif strcmp(method,'Psi')
-                
                 %Dimension of Psi
                 n = size(A,1); 
                 %Psi matrix initialization
@@ -140,7 +136,7 @@ classdef solEx1
                 time_vector*0,...
                 time_vector*0,...
                 time_vector*0+parameters(5),...
-                time_vector*0+atan(parameters(1)*parameters(2))];
+                time_vector*0+16*atan(parameters(1)*parameters(2))];
             nominal_trajectory_u = [time_vector, nominal_trajectory_x(:,5), nominal_trajectory_x(:,6)];
             
             varargout = {nominal_trajectory_x, nominal_trajectory_u};
@@ -167,8 +163,8 @@ classdef solEx1
             x0Tilde_exp3 = x0_exp3 - nominal_trajectory_x(1,2:end)';
             
         
-            x0 = {x0_exp1, x0_exp2, x0_exp3};
-            x0Tilde = {x0Tilde_exp1, x0Tilde_exp2, x0Tilde_exp3};
+            x0 = {x0_exp1, x0_exp2, x0_exp3, x0_exp3};
+            x0Tilde = {x0Tilde_exp1, x0Tilde_exp2, x0Tilde_exp3, x0Tilde_exp3};
             
             varargout = {x0, x0Tilde};
         end
@@ -200,11 +196,12 @@ classdef solEx1
             % experiments can be set at once. 
             %
             time_vector = (0:sampling_time/100:simulation_time)';
-            uOpenLoop_experiment_1 = [time_vector, 13 + 5*sin(time_vector/10)*0, 0.1*sin(time_vector)*0];
-            uOpenLoop_experiment_2 = [time_vector, 13 + 5*sin(time_vector/10)*0, 0.15*sin(pi/2 + time_vector)];
-            uOpenLoop_experiment_3 = [time_vector, 13 + 5*sin(time_vector/10)*0, 0.3*sin(pi/2 + time_vector)];
+            uOpenLoop_experiment_1 = [time_vector, 13 + time_vector*0, time_vector*0];
+            uOpenLoop_experiment_2 = [time_vector, 13 + 5*sin(time_vector/10)*0, time_vector*0 + pi];
+            uOpenLoop_experiment_3 = [time_vector, 13 + 5*sin(time_vector/10)*0, 4*pi*sin(pi/2 + time_vector)];
+            uOpenLoop_experiment_4 = [time_vector, 13 + 5*sin(time_vector/10), time_vector*0];
 
-            input_control_actions_open_loop = {uOpenLoop_experiment_1, uOpenLoop_experiment_2, uOpenLoop_experiment_3};
+            input_control_actions_open_loop = {uOpenLoop_experiment_1, uOpenLoop_experiment_2, uOpenLoop_experiment_3, uOpenLoop_experiment_4};
             %input_control_actions_open_loop = {uOpenLoop_experiment_2};
             varargout = {input_control_actions_open_loop};
         end

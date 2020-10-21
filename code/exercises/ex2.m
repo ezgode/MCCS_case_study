@@ -1,6 +1,7 @@
 %==========================================================================
 %   TP :            Case study: Exercse 2
 %   Contact:        ezequiel.gonzalezdebada@epfl.ch
+%                   matin.macktoobian@epfl.ch
 %==========================================================================
 classdef ex2
     %Class gathering the solutions of exercise 2. 
@@ -11,13 +12,13 @@ classdef ex2
             % column vector PARAMETERS containing the parameters value
             % characterizing the system and the linearization point.
             % Specifically it should contain (in the presented order):
-            %   - k : vlue of the reference curvature. 
-            %   - car_length : length of the car in meters.  
+            %   - k : the vlue of the reference curvature. 
+            %   - car_length : the length of the car in meters.  
             %   - sigma_a : sigma_a characterizing the dynamic of the
             %   actuator tracking the inputed acceleration. 
             %   - sigma_S : sigma_s characterizing the dynamic of the
             %   actuator tracking the inputed reference speed. 
-            %   - spReg : value of the speed reference. 
+            %   - spReg : the value of the speed reference. 
 
             %%- set up the parameters values 
             
@@ -50,7 +51,7 @@ classdef ex2
             % system and the desired SAMPLING_TIME.
             %
             % Additionally, the input METHOD will contain a string
-            % indicating the way the matrices PHI and GAMMA are wanted to
+            % indicating the way the matrices PHI and GAMMA are supposed to
             % be calculated. Such an input can take values 
             % - Euler : Euler approximation as discretization method. 
             % - Psi : Use the progrmmatically algorithm presented in the
@@ -107,7 +108,7 @@ classdef ex2
         function [varargout] = getCostFunctArrays(nStates,nInputs)
             % [Q1,Q2] = getCostFunctArrays(NSTATES,NINPUTS) returns the
             % matrices Q1 and Q2 defining the cost function leading to the
-            % design of a LQR control gain, given the number of states
+            % design of an LQR control gain, given the number of states
             % NSTATES and inputs NINPUTS. 
             %
             % The information regarding the values to be given to the
@@ -126,22 +127,22 @@ classdef ex2
             % LQR control gain, the matrix SINF as well as the history of
             % the singular values of the S matrix over the iterations,
             % given the PHI and GAMMA metrices describing the dicrete
-            % lineal model of the systme as well as the matrices Q1 and Q2
+            % linear model of the systme as well as the matrices Q1 and Q2
             % defining the cost function of the control problem. The last
-            % input is a string the specifies the method to be used. 
+            % input is a string which specifies the method to be used. 
             %
             % [LQR_K,SInf] =
             % solveLQRthroughRiccati(PHI,GAMMA,Q1,Q2,'Matlab') returns the 
             % value of the LQR control gain and SINF when calculated with
             % the matlab command 'dlqr'. For more details regarding how to
-            % use 'dlqr' command, please check the matlab 'help' or 'doc'
+            % use 'dlqr' command, please check the Matlab 'help' or 'doc'
             % information.
             %
             %TODO: implement algorithm in Section 7.1.7. 
             %
             % Hint: regarding the number of iterations for the calculation
             % of the control gain following Riccati approach, you should
-            % find (by trial and error) a number of iterations that is
+            % find (by trial and error) a number of iterations which is
             % sufficiently large so that the SINF matrix converges to an
             % unique value. This condition can be observed by keeping track
             % of the elements of the matrix or any other characteristics.
@@ -190,13 +191,13 @@ classdef ex2
             end
         end
         %        
-        function varargout = select_reference_path
+        function varargout = selectReferencePath
             % OUTPUT = select_reference_path returns a string with the name
             % of the mat file containing the path to be tracked that is
             % wanted to be used. 
             options = {'circle', 'path_1', 'path_2', 'path_3'};
             
-            varargout = {[]};
+            varargout = {'circle'};
         end    
         %        
         function varargout = getWorkingTrajectory(sampling_time, simulation_time, parameters)
@@ -237,7 +238,7 @@ classdef ex2
         end
         %
         function varargout = getInitialState(ntX)
-            %[X0, X0TILDE, XOBS] = getInitialState(NOMINAL_TRAJECTORY_X)
+            %[X0, X0TILDE, X0OBS] = getInitialState(NOMINAL_TRAJECTORY_X)
             % returns the initial state X0 of the non linear system, the
             % initial state X0TILDE of the linearized model of the system,
             % as well as the initial value of the state for the observer,
@@ -250,17 +251,11 @@ classdef ex2
             % that the observer is designed considering the linear model of
             % the system.
             
-            
             %%- define the value of x0 for experiment 1
-            %x0_experiment_1 = ;
+            %x0 = ;
             
             %%- define the value of x0Tilde for experiment 1
-            %x0Tilde_experiment_1 = ;
-            
-            %including the different values for different experiments as a
-            %cell
-            %x0 = {x0_experiment_1};
-            %x0Tilde = {x0Tilde_experiment_1};
+            %x0Tilde = ;
             
             %set outputs of the function 
             varargout = {[],[],[]};
@@ -298,36 +293,40 @@ classdef ex2
             %%- set up the output of the function
             varargout = {[]};
         end        
-        %        
-        function varargout = getCprime
-            % CPRIME = getCprime(obj)
-            % returns a third version of the matric C (called CPRIME) which
-            % will multiply to the state vector before feeding the control
-            % gain. In this way, we would easily simulate the consequences
-            % of, after having designed a LQR which works with the full
-            % state vector, not having the information regarding some of
-            % the states. 
+        %
+        function varargout = getWorkingSensor
+            % working_sensor = getWorkingSensor(obj)
+            % returns a column vector, whose elements (i,1) represents 
+            % whether the sensor measuring the state i works correctly
+            % (value 1), or not (value 0);
             %
-            % Notice that CPRIME must have the same dimensions than C and
-            % the elements on the row corresponding to the state that is
-            % wanted to consider missing equal to zero.
+            % It must have as many elements as number of states.
             %
-            %
-            %%- set the desired value for C'
-            %Cprime = ;
+            
+            %%- set the desired value for working_sensor 
+            %working_sensor = ;
             
             %%- set up the output of the function 
             varargout = {[]};
         end
         %        
-        function varargout = getCArrayConsideringMeasurableStates(C)
-            % [CMES,COBS,DOBS] = getCArrayConsideringMeasurableStates(C)
-            % returns matrices CMES, COBS, and DOBS, which are needed to
+        function varargout = updateCArray(C)
+            % C = updateCArray(C)
+            % takes as input the C array you originally defined in function
+            % 'getLinealModelArrays' and returns a new C array to make the
+            % output of the system contain only a subset of states. 
+            
+            %%- compose a new C array
+            % new_C_array =             
+            
+            %%- set up the output of the function 
+            varargout = {[]};
+        end
+        %
+        function varargout = getArrayDefiningObserverOutput(C)
+            % [COBS,DOBS] = getArrayDefiningObserverOutput(C)
+            % returns matrices COBS, and DOBS, which are needed to
             % implement the observer and have to be calculated from C. 
-            %
-            % Output CMES is a version of the C matrix with some rows
-            % ommited, which represents the assumption that the states
-            % corresponding to the ommited rows are not measurable. 
             %
             % The output matrices COBS and DOBS are used in the 'Observer'
             % block in the simulink model 'LQR_observer'. Go and explore
@@ -337,19 +336,18 @@ classdef ex2
             % Moreover, CObs and DObs should be constructed following the
             % approach presented in the solution of exercise 6.6.1 - 3
             %
-            
-            %%- set up the value of CMes 
+            %
             
             %%- set up arrays CObs and DObs que the appropriate size. 
             
             %%- set up the outputs of the function
-            varargout = {[],[],[]};
+            varargout = {[],[]};
         end
         %
-        function varargout = checkObservability(Phi,CMes)
-            % [N_STATES_NOT_OBSERVABLE] = checkObservability(PHI,CMES)
+        function varargout = checkObservability(Phi,C)
+            % [N_STATES_NOT_OBSERVABLE] = checkObservability(PHI,C)
             % checks whether the system described by Phi, 
-            % CMes is observable and returns the number of states that
+            % C is observable and returns the number of states that
             % cannot be observed. 
             %
             % Remember that the number of the states that cannot be
@@ -358,11 +356,6 @@ classdef ex2
             %
             % HINT: To calculate the observability matrix, you can use the
             % matlab command 'obsv'. 
-            %
-            % NOTICE: CMes is a version of the C matrix where some rows
-            % have been ommited, which would be connected with the
-            % assumption that the states corresponding to the ommited rows
-            % are not measurable. 
             
             
             %%- calculate the observability matrix
@@ -393,7 +386,7 @@ classdef ex2
             % Hint2: remember that the eigenvalues of the control closed
             % loop are given by eig(\Phi - \Gamma * lqr_K)
             %
-            % Hint3: to calculate the observer gain, use the matlab command
+            % Hint3: to calculate the observer gain, use the Matlab command
             %'place'. Read the help information and notice that, the
             %function is meant to be used to calculate control gains, that
             %is it returns gains to impose certain poles assuming the
@@ -403,10 +396,10 @@ classdef ex2
             %case, and introduce the needed modifications in the matrices
             %given to 'places'. 
             %
-            % HINT4: Think about what happens when you transpose the closed
+            % HINT4: think about what happens when you transpose the closed
             % loop dynamic of the observer.
             % 
-            % Notice 1: The outputs of this function can be defined as
+            % Notice 1: the outputs of this function can be defined as
             % cells gathering as many instances of the observer gain as
             % experiments are wanted to be run.
             %

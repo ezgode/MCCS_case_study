@@ -14,8 +14,8 @@
 \def \steering 		{\phi}
 \def \dsteering 	{\dot{\steering}}
 \def \steeringRef 	{\phi_r}
-\def \steerDyn 		{\sigma_s}
-\def \accDyn 		{\sigma_a}
+\def \steerDyn 		{\sigma_\steering}
+\def \accDyn 		{\sigma_\speed}
 \def \acc 			{a}
 \def \distToPath	{d}
 \def \ddistToPath 	{\dot{\distToPath}}
@@ -27,6 +27,7 @@
 \def \curvature		{\kappa(\pathCoor)}
 %
 \def \state			{x}
+\def \bx			{\overline{x}}
 \def \control 		{u}
 %
 \newcommand{\wstat}[1]{\overline{\state}_#1}

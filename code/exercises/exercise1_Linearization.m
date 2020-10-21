@@ -38,7 +38,7 @@ clear all, close all, clc;
     [A,B,C,D] = sol.getLinealModelArrays(parameters);
     if ut.stopCondition(A, 'getLinealModelArrays'), return; end
 
-    % Calculating discrete models
+    % Calculate discrete models
     [Phi_euler1, Gam_euler] = sol.getDiscreteLinearModel(A,B,C,D,sampling_time,'Euler');
     [Phi_psi,Gam_psi] = sol.getDiscreteLinearModel(A,B,C,D,sampling_time,'Psi');
     [Phi,Gam] = sol.getDiscreteLinearModel(A,B,C,D,sampling_time,'c2d');
@@ -51,24 +51,24 @@ clear all, close all, clc;
     ut.printLabeledAB(Phi_psi, Gam_psi, 'Discrete description obtained programmatically');
     ut.printLabeledAB(Phi, Gam, 'Discrete description obtained using Matlab functions');
 
-    % Comparison Euler vs Matlab
+    % Comparing Euler to Matlab
     ut.printRelativeError(Phi, Phi_euler1, Gam, Gam_euler, 'Comparing Euler vs Matlab')
     ut.printRelativeError(Phi, Phi_psi, Gam, Gam_psi, 'Comparing Programmatically vs Matlab')
     
     % time vector (required to generate nominal trajectories)
     nominal_trajectory_sampling_time = sampling_time/100;
 
-    % generate nominal trajectories for simulation
+    % Generate nominal trajectories for simulation
     [nominal_trajectory_x, nominal_trajectory_u] = sol.getWorkingTrajectory(nominal_trajectory_sampling_time, simulation_time, parameters);
     if ut.stopCondition(nominal_trajectory_x, 'getWorkingTrajectory'), return; end
 
-%% simulations
+%% Simulations
 %==========================================================================
     % Considering the nominal trajectory, get initial state. 
     [x0_experiments, x0Tild_experiments] = sol.getInitialState(nominal_trajectory_x);
     if ut.stopCondition(x0_experiments, 'getInitialState'), return; end
 
-    %Generate open loop control reference 
+    % Generate open loop control reference 
     [input_control_sequence_exps] = sol.getOpenLoopControlSignal(nominal_trajectory_sampling_time,simulation_time);
     if ut.stopCondition(input_control_sequence_exps, 'getOpenLoopControlSignal'), return; end
 
@@ -85,6 +85,5 @@ clear all, close all, clc;
         % plot results
         ax_cells = ut.plotResults(time, discrete_time, continuous_non_linear_model_global_position, open_loop_u, continuous_non_linear_model_x, path_to_track, parameters, 'figure_name', sprintf('open Loop - exp%02d: state',exp_id),'plot_label','non-linear continuous model');
         ut.plotResults(time, discrete_time, continuous_linear_model_global_position, open_loop_u, continuous_linear_model_x, path_to_track, parameters, 'plot_label','continuous linear model','ax_cells',ax_cells,'animate',animate);
-        %ut.plotResults(time, discrete_time, continuous_non_linear_model_global_position, open_loop_u, continuous_non_linear_model_x, path_to_track, parameters, 'plot_label','continuous non-linear model','ax_cells',ax_cells,'animate',animate);
         ut.plotResults(time, discrete_time, discrete_linear_model_global_position, open_loop_u, discrete_linear_model_x, path_to_track, parameters, 'plot_label','discrete linear model','ax_cells',ax_cells,'animate',false);
     end

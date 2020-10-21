@@ -71,9 +71,9 @@ classdef utilities
                 ax_cells{3} = gobjects(1,1);
                 ax_cells{3} = axes('Parent',f3,'NextPlot','add');
                 if ~isempty(args.figure_name)
-                    f1.Name = sprintf('%s - inputs',args.figure_name);
-                    f2.Name = sprintf('%s - states',args.figure_name);
-                    f3.Name = sprintf('%s - trajectory',args.figure_name);
+                    f1.Name = sprintf('%s - inputs', args.figure_name);
+                    f2.Name = sprintf('%s - states', args.figure_name);
+                    f3.Name = sprintf('%s - trajectory', args.figure_name);
                 end                
             end
             
@@ -101,8 +101,7 @@ classdef utilities
             
             set(ax_cells{3},'XLim',x_lim,'YLim',y_lim);
             
-            if ~isempty(args.plot_label)
-                
+            if ~isempty(args.plot_label)    
                 legend_texts = legend(ax_cells{3}(1));
                 if ~isempty(legend_texts), legen_strings = legend_texts.String(1:(end));
                 else, legen_strings = {}; end
@@ -114,42 +113,23 @@ classdef utilities
                     end
                 end
                 strings = strings(valid_idx>0);
-                legend(ax_cells{3}(1), strings{:});                   
-%                 
-%                 
-%                 
-%                 
-%                 legend_texts = legend(ax_cells{3}(1));
-%                 if ~isempty(legend_texts)
-%                     legen_strings = legend_texts.String(1:end);
-%                 else
-%                     legen_strings = {};
-%                 end
-%                 strings = {legen_strings{:}, args.plot_label};
-%                 legend(ax_cells{3}(1), strings{:});            
+                legend(ax_cells{3}(1), strings{:});     
             end
             obj.animateResults(args.time, args.discrete_time, args.global_trajectory, args.path_to_track.coordinates, args.parameters,'label',args.plot_label,'plot',args.animate); 
         end
         %
-        function selected_time = select_time_vector(obj, varargin)
+        function selected_time = select_time_vector(~, time, discrete_time, vector, varargin)
             % select_time_vector(TIME, DISCRETE_TIME, VECTOR)
             % returns the approriate time vector (to be selected from
             % TIME and DISCRETE_TIME) whose dimension corresponds with the
-            % dimension of VECTOR. 
-            p = inputParser;
-            p.addRequired('time')
-            p.addRequired('discrete_time')
-            p.addRequired('vector')
-            p.parse(varargin{:})
-            args = p.Results;
-            
-            selected_time = args.time;
-            if size(args.vector,1)~=length(args.time) && size(args.vector,1)==length(args.discrete_time)
-                selected_time = args.discrete_time;
+            % dimension of VECTOR.             
+            selected_time = time;
+            if size(vector,1)~=length(time) && size(vector,1)==length(discrete_time)
+                selected_time = discrete_time;
             end                      
         end
         %
-        function animateResults(obj, varargin)
+        function animateResults(obj, time, discrete_time, global_trajectory, path, parameters, varargin)
             % animateResults(TIME, GLOBAL_TRAJECTORY, PATH,
             % PARAMETERS) animates the simulation results given the TIME
             % vector, the GLOBAL_TRAJECTORY described by the vehicle, the
@@ -163,21 +143,15 @@ classdef utilities
             %   - plot: boolean parameter showing wether the animation
             %   should be represented. 
             p = inputParser;
-            p.addRequired('time');
-            p.addRequired('discrete_time');
-            p.addRequired('global_trajectory');
-            p.addRequired('path');
-            p.addRequired('parameters');
-            %
             p.addOptional('label','');
             p.addOptional('plot',true);
             p.parse(varargin{:});
             args = p.Results;
             
             if args.plot
-                selected_time = obj.select_time_vector(args.time, args.discrete_time, args.global_trajectory(:,1));
+                selected_time = obj.select_time_vector(time, discrete_time, global_trajectory(:,1));
                 %resample global_trajectory
-                args.global_trajectory = interp1(selected_time, args.global_trajectory(:,1:3), selected_time(1):0.05:selected_time(end));
+                global_trajectory = interp1(selected_time, global_trajectory(:,1:3), selected_time(1):0.05:selected_time(end));
 
                 %Resampling trajectory. 
                 selected_time = selected_time(1):0.01:selected_time(end);
@@ -186,9 +160,9 @@ classdef utilities
                 f1.Name = sprintf('%s - Animation',args.label);
                 ax3 = axes(f1);hold on;axis(ax3,'equal');
 
-                global_trajectory = args.global_trajectory(:,1:3);
+                global_trajectory = global_trajectory(:,1:3);
 
-                plot(args.path(:,1),args.path(:,2),'Parent',ax3,'LineStyle','--');
+                plot(path(:,1),path(:,2),'Parent',ax3,'LineStyle','--');
                 
                 x_range = [min(global_trajectory(:,1)),max(global_trajectory(:,1))];
                 y_range = [min(global_trajectory(:,2)),max(global_trajectory(:,2))];
@@ -203,16 +177,16 @@ classdef utilities
                 
                 animation_step_size = 0.03;
                 n_steps = ceil(animation_step_size/mean(diff(selected_time)));
-                car_profile = carProf(args.parameters(2),0.5*args.parameters(2));
-                car_profile(:,1) = car_profile(:,1) + 0.5*args.parameters(2);
+                car_profile = obj.carProf(parameters(2),0.5*parameters(2));
+                car_profile(:,1) = car_profile(:,1) + 0.5*parameters(2);
                 
                 frame_cnt = 0;
                 for i = 1:n_steps:(size(global_trajectory,1)-1)
                     rotated_car_profile = obj.rotatePath(car_profile,global_trajectory(i,3));
                     set(plot_handle,'xdata',rotated_car_profile(:,1) + global_trajectory(i,1),'ydata',rotated_car_profile(:,2) + global_trajectory(i,2));
                     
-                    x_lim = global_trajectory(i,1) + [-1 1]*args.parameters(2)*5;
-                    y_lim = global_trajectory(i,2) + [-1 1]*args.parameters(2)*5;
+                    x_lim = global_trajectory(i,1) + [-1 1]*parameters(2)*5;
+                    y_lim = global_trajectory(i,2) + [-1 1]*parameters(2)*5;
                     
                     if x_lim(2)<=x_lim(1), x_lim(2) = x_lim(1) + 0.0001;end
                     if y_lim(2)<=y_lim(1), y_lim(2) = y_lim(1) + 0.0001;end
@@ -227,19 +201,18 @@ classdef utilities
             end
         end
         %
-        function path = rotatePath(obj, path,ang)
-            % path = rotatePath(PATH,ANG) takes a two columns array representing a closed
-            % path and rotates its by a certain angle ANG.
-            
+        function path = rotatePath(~, path,ang)
+            % path = rotatePath(PATH,ANG) takes a two columns array %
+            % representing a path and rotates its by a certain angle ANG.
             rot = [cos(ang),sin(ang);-sin(ang),cos(ang)];
             path = path*rot;
         end
         %
         function compareObservedVsRealStates(obj, varargin)
-            % animateResults(TIME, DISCRETE_T, OBSERVED_X, NOISY_X, X) 
+            % compareObservedVsRealStates(TIME, DISCRETE_T, OBSERVED_X, NOISY_X, X) 
             % plots the real states of the system X, the noisy states X,
             % and the estimation of the states given by the implemented
-            % observer OBSERVED_X in the same plot for comparison porposes.
+            % observer OBSERVED_X in the same plot for comparison purposes.
             % The function requires the TIME and DISCRETE_TIME vector as
             % additional inputs.
             %
@@ -297,6 +270,7 @@ classdef utilities
             %   - stairs : boolean flag which would make this function use
             %   the stairs instead of the plot function to represent the
             %   given data.
+            %
             p = inputParser;
             p.addOptional('noisy_y_data',[])
             p.addOptional('x_label',[])
@@ -309,7 +283,8 @@ classdef utilities
             
             for i = 1:size(y_data,2)
                 if ~isempty(args.noisy_y_data)
-                    plot(selected_time,args.noisy_y_data(:,i),'Parent',ax_cells(i),'color',[1 1 1]*.8);
+                    noisy_t = obj.select_time_vector(time, discrete_time, args.noisy_y_data);
+                    plot(noisy_t,args.noisy_y_data(:,i),'Parent',ax_cells(i),'color',[1 1 1]*.8);
                     line_width = 2;
                 else
                     line_width =0.5;
@@ -337,36 +312,36 @@ classdef utilities
             end
         end
         %
-        function drawSingularValEvol(obj, singular_values)
+        function drawSingularValEvol(~, singular_values)
             % drawSingularValEvol(SINGULAR_VALUES) plots the evolution of the SINGULAR_VALUES to
             %represent the convergency of matrix S as the time horizon
             %increases.
             f = figure('Name','Evolution of svds of S for convergency illustration');
             ax = axes('Parent',f,'NextPlot','add');
-            plot(singular_values,'Parent',ax);
+            plot(ax, singular_values);
             grid;
             xlabel('Nombre of iterations'),ylabel('singular velues of matrix S')            
         end
         %
-        function [Nodes, Edges] = buildDynProgGraph(obj, varargin)
+        function [Nodes, Edges] = buildDynProgGraph(obj, sampling_time, initial_state, path_to_track, allowed_u, parameters, varargin)
             % [NODES, EDGES] = buildDynProgGraph(SAMPLING_TIME, INITIAL_STATE,
             % PATH_TO_TRACK, ALLOWED_U, PARAMETERS) creates a graph
             % (defined by a set of NODES and EDGES) representing the
-            % possible trajectories that the system can evolve to given its
+            % possible trajectories that the system can follow given its
             % INITIAL_STATE, the set of control inputs ALLOWED_U, the
-            % PARAMETERS of the system, the PATH_TO_TRACK and the SAMPLING_TIME between
-            % control actions. 
+            % PARAMETERS of the system, the PATH_TO_TRACK and the %
+            % SAMPLING_TIME between control actions. 
             %
             % In order to alleviate the computional complexity required to
             % build a fully connected tree, a randomized approach is herein
             % adopted. Specifically, once a set of fully connected nodes
-            % are built, the number of nodes that are creating given a root
-            % node, will be randomly reduced. 
+            % are built, the number of new nodes that are created from %
+            % every parent node, will be dynamically reduced. 
             %
             %
             % This function returns two outputs: 
             %  Nodes = [ID, t, flag, px, py, yaw, x1 x2 x3 x4 x5] which is
-            %  an array with as many rows as nodes in the graph containing
+            %  an array with as many rows as nodes in the graph, containing
             %  information regarding the state that each node represents as
             %  well as the TIME, NODEID and an additional FLAG. 
             %  - ID: mode ID
@@ -382,8 +357,9 @@ classdef utilities
             %  represents.
             %
             %
-            % The ouput array EDGES contains the information of which nodes
-            % are connected. Specifically it will be a 4-columns array
+            % The ouput array EDGES contains the information of which paris 
+            % of nodes are connected. Specifically it will be a 4-columns
+            % array
             % containing, in order, 
             %  - predecessor node id
             %  - sucessor node id. 
@@ -415,15 +391,7 @@ classdef utilities
             %   adapt the number of edges to be constructed from every node
             %   in the previous layer. 
             p = inputParser;
-            
-            p.addRequired('sampling_time');
-            p.addRequired('initial_state');
-            p.addRequired('path_to_track');
-            p.addRequired('allowed_u');
-            p.addRequired('parameters');
-            
             p.addOptional('max_n_nodes',25000);
-            %p.addOptional('max_n_nodes',5000);
             p.addOptional('plot_nodes',false);
             p.addOptional('plot_edges',false);
             p.addOptional('plot',false);
@@ -435,20 +403,22 @@ classdef utilities
             p.parse(varargin{:});
             args = p.Results;
             
-            n_states = length(args.initial_state) + 3;
-            
+            n_states = length(initial_state) + 3;
+            % initializing arrays
             Nodes = zeros(args.max_n_nodes, 3 + n_states);
             Edges = zeros(args.max_n_nodes, 4);
             
-            %Node ids. 
+            %Setting the nodes ID. 
             Nodes(:,1) = (1:args.max_n_nodes)';
             
-            
-            
             %set up first node. 
-            initial_position = interp1(args.path_to_track.s_coordinate, args.path_to_track.coordinates, args.initial_state(1));
-            orientation = interp1(args.path_to_track.s_coordinate, args.path_to_track.orientation, args.initial_state(1)) + args.initial_state(3); 
-            Nodes(1,4:end) = [initial_position,orientation,args.initial_state'];
+            path_ori =  interp1(path_to_track.s_coordinate, path_to_track.orientation, initial_state(1));
+            initial_position = ...
+                interp1(path_to_track.s_coordinate, path_to_track.coordinates, initial_state(1)) + ...
+                [-sin(path_ori), cos(path_ori)]*initial_state(2);
+            
+            orientation = path_ori + initial_state(3); 
+            Nodes(1,4:end) = [initial_position,orientation,initial_state'];
             
             next_node_pointer = 2;
             next_edge_pointer = 1;
@@ -458,33 +428,58 @@ classdef utilities
             tic
             fprintf('Building the graph');
             while ~end_flag 
+                % get the list of nodes that should be pushed forward. 
                 open_nodes_id_list = find( Nodes(:,3) == 0 & Nodes(:,1) < next_node_pointer);
                 
+                % for every of those nodes
                 for root_node_id = open_nodes_id_list'
                     cnt = obj.printProgression(cnt, args.max_n_nodes-args.threshold_number_of_nodes, 100);
                     valid = false;
-                    options = 1:size(args.allowed_u,1);
-                    while ~valid && any(options>0) && ~end_flag
-                        chosen_allowed_u = args.allowed_u;
+                    
+                    % for every u option
+                    u_options = 1:size(allowed_u,1);
+                    while ~valid && any(u_options>0) && ~end_flag
+                        
+                        chosen_allowed_u = allowed_u;
                         chosen_idxs = 1:size(chosen_allowed_u,1);
                         valid_idxs = 1:size(chosen_allowed_u,1);
                         
+                        %retrieve the state of the root node. 
+                        root_node_state = Nodes(root_node_id,4:end);
+                        
                         %how many nodes in the previous instant were dead?
-                        n_nodes_previous_time = sum( (Nodes(:, 2) == Nodes(root_node_id, 2)) );
+                        nodes_ID_prev_time = find((Nodes(:, 2) == Nodes(root_node_id, 2)));
+                        n_nodes_previous_time = length(nodes_ID_prev_time);
                         previous_time_dead_nodes = sum( (Nodes(:, 2) == Nodes(root_node_id, 2)) & (Nodes(:, 3) == 2));
                         
-                        %if Nodes(root_node_id, 2)>2 && (n_nodes_previous_time- previous_time_dead_nodes)>40
-                        if Nodes(root_node_id, 2)>args.time_to_loose_it && (n_nodes_previous_time- previous_time_dead_nodes)>args.threshold_number_of_nodes
-                            %n_chosen_us = 1+1*(rand>0.8);% + (rand>0.99);
-                            n_chosen_us = 1;% + (rand>0.99);
+                        randomize = Nodes(root_node_id, 2)>args.time_to_loose_it;
+                        
+                        enough_nodes_prev_time = sum( abs(Nodes(nodes_ID_prev_time,8))<2) >args.threshold_number_of_nodes;
+                        enough_nodes_prev_time = (n_nodes_previous_time - previous_time_dead_nodes)>args.threshold_number_of_nodes;
+                        
+                        if randomize && enough_nodes_prev_time
+                            %chose only u_options control values to
+                            %evaluate. 
                             
-                            valid_idxs = find(options>0);
-                            chosen_idxs = randi(length(valid_idxs), min(length(valid_idxs), n_chosen_us),1);
+                            u_ops = find(u_options);
+                            if root_node_state(6)>0
+                                u_ops = u_ops( allowed_u(u_ops,2)<=0);
+                            else
+                                u_ops = u_ops( allowed_u(u_ops,2)>=0);
+                            end
+                            if isempty(u_ops)
+                                u_ops = find(u_options);
+                            end
+                            
+                            
+                            valid_idxs = find(u_ops>0);
+                            valid_idxs = u_ops;
+                            valid_idxs = find(u_options);
+                            chosen_idxs = randi(length(valid_idxs), min(length(valid_idxs), 1),1);
                                                         
-                            chosen_allowed_u = args.allowed_u(valid_idxs(chosen_idxs),:);
+                            chosen_allowed_u = allowed_u(valid_idxs(chosen_idxs),:);
                         end
-                        %fprintf('%d\n',(n_nodes_previous_time- previous_time_dead_nodes))
-
+                        
                         %id of the following nodes, which we now because we now
                         %how many actions combinations we are evaluating
                         n_new_states = size(chosen_allowed_u,1);
@@ -494,32 +489,43 @@ classdef utilities
                         
                         n_new_states = length(new_nodes_id);
 
-                        %retrieve the state of the root node. 
-                        root_node_state = Nodes(root_node_id,4:end);
+
 
 
                         root_node_states = repmat(root_node_state',1,n_new_states);
                         new_states = root_node_states;
 
-                        curvature = interp1(args.path_to_track.s_coordinate, args.path_to_track.curvature, rem(root_node_states(4,:),args.path_to_track.s_coordinate(end)));
+                        %curvature = interp1(path_to_track.s_coordinate, path_to_track.curvature, rem(root_node_states(4,:),path_to_track.s_coordinate(end)));
 
                         %non linear model implementation
-                        new_states(1,:) = root_node_states(1,:) + args.sampling_time*( root_node_states(7,:) .* cos(root_node_states(3,:)) );
-                        new_states(2,:) = root_node_states(2,:) + args.sampling_time*( root_node_states(7,:) .* sin(root_node_states(3,:)) );
-                        new_states(3,:) = root_node_states(3,:) + args.sampling_time*( root_node_states(7,:)/args.parameters(2).* tan(root_node_states(8,:)) );
+                        new_states(1,:) = root_node_states(1,:) + sampling_time*( root_node_states(7,:) .* cos(root_node_states(3,:)) );
+                        new_states(2,:) = root_node_states(2,:) + sampling_time*( root_node_states(7,:) .* sin(root_node_states(3,:)) );
+                        new_states(3,:) = root_node_states(3,:) + sampling_time*( root_node_states(7,:)/parameters(2).* tan(root_node_states(8,:)) );
 
-                        ds =  (root_node_states(7,:).*cos(root_node_states(6,:)))./(1 - root_node_states(6,:).*curvature);
-                        new_states(4,:) = root_node_states(4,:) + args.sampling_time*( ds );
-                        new_states(5,:) = root_node_states(5,:) + args.sampling_time*( root_node_states(7,:).*sin(root_node_states(6,:)) );
-                        new_states(6,:) = root_node_states(6,:) + args.sampling_time*( root_node_states(7,:)./args.parameters(2).*tan(root_node_states(8,:)) - curvature .* ds );
-                        new_states(7,:) = root_node_states(7,:) + args.sampling_time*(args.parameters(3) * (chosen_allowed_u(:,1)' - root_node_states(7,:)));
-                        new_states(8,:) = root_node_states(8,:) + args.sampling_time*(args.parameters(4) * (chosen_allowed_u(:,2)' - root_node_states(8,:)));                  
+                        dist_path_to_states = permute(sum((path_to_track.coordinates - permute(new_states(1:2,:)',[3,2,1])).^2,2),[1,3,2]);
+                        min_dist_to_path = min(dist_path_to_states,[],1);
+                        proj_point_id = sum((dist_path_to_states == min_dist_to_path) .* ((1:size(dist_path_to_states,1))'),1);
+                        s_proj = path_to_track.s_coordinate(proj_point_id);
+                        head = path_to_track.orientation(proj_point_id);
+                        
+                        %ds =  (root_node_states(7,:).*cos(root_node_states(6,:)))./(1 - root_node_states(6,:).*curvature);
+                        %new_states(4,:) = root_node_states(4,:) + sampling_time*( ds );
+                        %new_states(5,:) = root_node_states(5,:) + sampling_time*( root_node_states(7,:).*sin(root_node_states(6,:)) );
+                        %new_states(6,:) = root_node_states(6,:) + sampling_time*( root_node_states(7,:)./parameters(2).*tan(root_node_states(8,:)) - curvature .* ds );
+
+                        
+                        new_states(4,:) = s_proj;
+                        new_states(5,:) = min(dist_path_to_states,[],1);
+                        new_states(6,:) = new_states(3,:) - head';                        
+                        
+                        new_states(7,:) = root_node_states(7,:) + sampling_time*(parameters(3) * (chosen_allowed_u(:,1)' - root_node_states(7,:)));
+                        new_states(8,:) = root_node_states(8,:) + sampling_time*(parameters(4) * (chosen_allowed_u(:,2)' - root_node_states(8,:)));                  
 
 
                         if any(new_nodes_id)>args.max_n_nodes
                             error('You are changing the size of Nodes array, there is something wrong');
                         end
-                        Nodes(new_nodes_id,2) = Nodes(root_node_id,2) + args.sampling_time;
+                        Nodes(new_nodes_id,2) = Nodes(root_node_id,2) + sampling_time;
 
                         Nodes(new_nodes_id,4:end) = new_states';
 
@@ -536,14 +542,15 @@ classdef utilities
                         %if some of the new nodes are already too far away,
                         %mark them as explored even if they are not, so that
                         %they do not keep on being broadcasted. 
-                        Nodes(new_nodes_id, 3) = 2*( abs(Nodes(new_nodes_id, 3 + 5)) > args.max_lateral_deviation );
-                        Nodes(new_nodes_id, 3) = 2*( Nodes(new_nodes_id, 3) | abs(Nodes(new_nodes_id, 3 + 6)) > args.max_heading_deviation);
-                        Nodes(new_nodes_id, 3) = 2*(Nodes(new_nodes_id, 3) | abs(Nodes(new_nodes_id, 3 + 7)) < 0);
+                        node_state = Nodes(new_nodes_id, 7:11);
+                        Nodes(new_nodes_id, 3) = 2*( abs(node_state(:, 2)) > args.max_lateral_deviation );
+                        Nodes(new_nodes_id, 3) = 2*( Nodes(new_nodes_id, 3)==2 | (abs(node_state(:, 3)) > args.max_heading_deviation));
+                        Nodes(new_nodes_id, 3) = 2*( Nodes(new_nodes_id, 3)==2 | (abs(node_state(:, 4)) < 0));
 
                         next_node_pointer = new_nodes_id(end) + 1;
                         
                         valid = any(Nodes(new_nodes_id, 3)==0);
-                        options(valid_idxs(chosen_idxs)) = -1*(Nodes(new_nodes_id, 3)==1);
+                        u_options(valid_idxs(chosen_idxs)) = -1*(Nodes(new_nodes_id, 3)==1);
                         %if next_node_pointer > args.max_n_nodes
                         %    ''
                         %end
@@ -558,7 +565,7 @@ classdef utilities
                 ax = axes('NextPlot','add');
                 n_valid_edges = find(Edges(:,1)==0,1,'first') - 1;
                 
-                plot(args.path_to_track.coordinates(:,1),args.path_to_track.coordinates(:,2),'Parent',ax)
+                plot(path_to_track.coordinates(:,1),path_to_track.coordinates(:,2),'Parent',ax)
                 if args.plot_nodes && ~args.plot_edges && ~args.plot
                     xdata = Nodes(:,4);
                     ydata = Nodes(:,5);                    
@@ -581,7 +588,7 @@ classdef utilities
             Edges = Edges(Edges(:,1)~=0,:);
         end
         %
-        function counter = printProgression(obj,  counter, n_iterations, n_slots)
+        function counter = printProgression(~,  counter, n_iterations, n_slots)
             % printProgression(COUNTER, N_ITERATIONS, N_SLOTS) prints a
             % loading bar in the command windows. It takes the number of
             % iterations N_ITERATIONS that are expected, the current
@@ -608,11 +615,9 @@ classdef utilities
             counter = counter + 1;
         end
         %
-        function [ax] = plotGraph(obj, varargin)
-            % plotGraph(NODES, EDGES, PATH_TO_TRACK) plots the paths
-            % corresponding to every branch of the graph (defined by NODES
-            % and EDGES) as well as the PATH_TO_TRACK for comparison
-            % purposes. 
+        function [ax] = plotGraph(~, nodes, edges, path_to_track, varargin)
+            % plotGraph(NODES, EDGES, PATH_TO_TRACK) draws the graph 
+            % branches and ell as the PATH_TO_TRACK for comparison purposes. 
             %
             % Additionally, those inputs can be followed by some
             % parameter/value pairs to specify additional properties of the
@@ -629,16 +634,12 @@ classdef utilities
             %   - PLOT_DEAD_ENDS : boolean flag showing whether the nodes
             %   representing dead ends should be highlighted.
             %   - obstacles : structure with a unique field 'position'
-            %   containing an array (with as many rows as obstacles are
-            %   wanted to be included) representing the position of a set
-            %   of obstacles.
+            %   containing a two-columns array (with as many rows as 
+            %   obstacles are wanted to be included) representing the %
+            %   position of a set of obstacles.
             %   - obstacle_marker_size : parameter showing the size of the
             %   marker representing the obstacles. 
-            p = inputParser;
-            p.addRequired('nodes');
-            p.addRequired('edges');
-            p.addRequired('path_to_track');
-            
+            p = inputParser;            
             p.addOptional('plot_nodes',false);
             p.addOptional('plot_edges',false);
             p.addOptional('plot',false);
@@ -652,38 +653,38 @@ classdef utilities
             
             figure;
             ax = axes('NextPlot','add');
-            n_valid_edges = find(args.edges(:,1)==0,1,'first') - 1;
+            n_valid_edges = find(edges(:,1)==0,1,'first') - 1;
                 
-            plot(args.path_to_track.coordinates(:,1),args.path_to_track.coordinates(:,2),'Parent',ax)            
+            plot(path_to_track.coordinates(:,1),path_to_track.coordinates(:,2),'Parent',ax)            
             
             if args.plot_nodes || args.plot_edges || args.plotargs.plot
                 nodes_color = [1 1 1]*.7;
                 if args.plot_nodes && ~args.plot_edges && ~args.plot
-                    xdata = args.nodes(:,4);
-                    ydata = args.nodes(:,5);                    
+                    xdata = nodes(:,4);
+                    ydata = nodes(:,5);                    
                     plot(xdata, ydata,'.','MarkerSize',5,'Parent',ax,'Color',nodes_color);
                 elseif ~args.plot_nodes && args.plot_edges && ~args.plot
-                    xdata = [args.nodes(args.edges(1:n_valid_edges,1),4), args.nodes(args.edges(1:n_valid_edges,2),4)]';
-                    ydata = [args.nodes(args.edges(1:n_valid_edges,1),5), args.nodes(args.edges(1:n_valid_edges,2),5)]';
+                    xdata = [nodes(edges(1:n_valid_edges,1),4), nodes(edges(1:n_valid_edges,2),4)]';
+                    ydata = [nodes(edges(1:n_valid_edges,1),5), nodes(edges(1:n_valid_edges,2),5)]';
                     plot(xdata,ydata,'MarkerSize',5,'Parent',ax,'Color',nodes_color);
                 else
-                    xdata = [args.nodes(args.edges(1:n_valid_edges,1),4), args.nodes(args.edges(1:n_valid_edges,2),4)]';
-                    ydata = [args.nodes(args.edges(1:n_valid_edges,1),5), args.nodes(args.edges(1:n_valid_edges,2),5)]';
+                    xdata = [nodes(edges(1:n_valid_edges,1),4), nodes(edges(1:n_valid_edges,2),4)]';
+                    ydata = [nodes(edges(1:n_valid_edges,1),5), nodes(edges(1:n_valid_edges,2),5)]';
                     plot(xdata,ydata,'.-','MarkerSize',5,'Parent',ax,'Color',nodes_color);
                 end
             end
             
             if args.plot_terminal_nodes
-                terminal_nodes = find(args.nodes(:,3)==0);
-                xdata = args.nodes(terminal_nodes,4);
-                ydata = args.nodes(terminal_nodes,5);
+                terminal_nodes = find(nodes(:,3)==0);
+                xdata = nodes(terminal_nodes,4);
+                ydata = nodes(terminal_nodes,5);
                 plot(xdata, ydata,'.','MarkerSize',20,'Parent',ax,'Color',[0 0 1]);                
             end
             
             if args.plot_dead_ends
-                dead_end_nodes = find(args.nodes(:,3)==2);
-                xdata = args.nodes(dead_end_nodes,4);
-                ydata = args.nodes(dead_end_nodes,5);
+                dead_end_nodes = find(nodes(:,3)==2);
+                xdata = nodes(dead_end_nodes,4);
+                ydata = nodes(dead_end_nodes,5);
                 plot(xdata, ydata,'.','MarkerSize',10,'Parent',ax,'Color',[1 0 0]);
             end          
             
@@ -692,7 +693,7 @@ classdef utilities
             end
         end
         %
-        function plotDynProgTraj(obj,  nodes, optimal_node_sequence, ax)
+        function plotDynProgTraj(~,  nodes, optimal_node_sequence, ax)
             % plotDynProgTraj(NODES, OPTIMAL_NODE_SEQUENCE, AX)
             % represents in the axes AX, the path defined by the
             % OPTIMAL_NDOE_SEQUENCE, by using the information in NODES. 
@@ -703,7 +704,7 @@ classdef utilities
             end
         end
         %
-        function car = carProf(obj, car_length, car_width)
+        function car = carProf(~, car_length, car_width)
             % CAR = carProf(CAR_LENGTH, CAR_WIDTH) returns a two-columns
             % array defining the profile of a car given its CAR_LENGTH and
             % CAR_WIDTH, which will be used for representation purposes. 
@@ -730,24 +731,20 @@ classdef utilities
             % complete_simulink_model_name(name_simulink_file) returns a
             % string containing the path of the right simulink file to use
             % depending on your matlab version and the NAME_SIMULINK_FILE.
-            % It requires the directory tree which is provided to remain
-            % unchanged. 
-            matlab_version = version('-release');
-            
+            % It requires the provided directory structure to stay unchanged. 
+            %matlab_version = version('-release');
             extension = '.slx';
             if obj.isMasterComputer
                 solved_label = 'solved_';
             else
                 solved_label = '';
             end
-            if isdir('./simulinkFiles/')
-                complete_name = ['./simulinkFiles/', matlab_version, '/', solved_label, name_simulink_file, sprintf('_R%s',matlab_version),extension];
+            if isfolder('./functions/super_user_utilities/')
+                complete_name = [solved_label, name_simulink_file, extension];
             else
-                complete_name = [solved_label, name_simulink_file, sprintf('_R%s',matlab_version),extension];
+                file = dir(['./', solved_label, name_simulink_file, '*', extension]);
+                complete_name = file.name;
             end
-            
-            %fprintf('\n Simulating : %s\n', complete_name);
-            
         end
         %
         function flag = isMasterComputer(~)
@@ -757,9 +754,9 @@ classdef utilities
             % functions within this utility class, mainly related to the
             % solution classes and simulink files that are loaded. Notice
             % that changing manually this value will not magically provide
-            % you with the solution of the exercise.      
+            % you with the solution of the exercise but rather braking the 
+            % code.  
             flag = isfile('key.txt');
-            %flag = strcmp(license,'');
         end
         %
         function printLabeledAB(obj,  varargin)
@@ -801,7 +798,7 @@ classdef utilities
             obj.printLabeledAB( errorA, errorB, args.matrix_label, 'description', args.description);
         end        
         %
-        function printJointAB(obj, Phi,Gam)
+        function printJointAB(~, Phi,Gam)
             % printJointAB(PHI, GAM) prints in the command window the PHI
             % and GAM matrices jointly. 
             for i = 1:size(Phi,1)
@@ -823,29 +820,28 @@ classdef utilities
             noiseMod.freq = 5;
         end
         %
-        function printComplexNumbers(obj,  varargin)
+        function printComplexNumbers(~, data, varargin)
             % printComplexNumbers(DATA,LABEL) prints in the command windows and in a
             % clean way, the set of complex number passed in DATA.
             % Information that should be preceded by the string in LABEL. 
             p = inputParser;
-            p.addRequired('data');
             p.addOptional('label','');
             p.parse(varargin{:});
             args = p.Results;
             
             fprintf('\n%s : \n', args.label)
-            R = real(args.data);
-            IM = imag(args.data);
-            for j = 1:length(args.data)
+            R = real(data);
+            IM = imag(data);
+            for j = 1:length(data)
                 fprintf('\t%10.7f, %10.7f i\n',R(j),IM(j))
             end
         end
         %
-        function stop_flag = stopCondition(obj,  function_output, function_name)
-            % SIMULATE_FLAG = solutionImplemented(FUNCTION_OUTPUT,
-            % FUNCTION_NAME, SIMULATE_FLAG) returns a boolean variable
-            % SIMULATE_FLAG which is false if the input SIMULATE_FLAG is
-            % false or/and if the FUNCTION_OUTPUT given as input is empty.
+        function stop_flag = stopCondition(~,  function_output, function_name)
+            % SIMULATE_FLAG = stopCondition(FUNCTION_OUTPUT,
+            % FUNCTION_NAME) returns a boolean variable
+            % SIMULATE_FLAG which is false if the FUNCTION_OUTPUT given 
+            % as input is empty.
             %
             % Additionally, this function prints a message pointing out the
             % functions that have not been completed, for which the input
@@ -857,14 +853,14 @@ classdef utilities
             end
         end
         %
-        function XY_position = SDCoordToXY(obj,  path_to_track, s_coord, d_coord)
+        function XY_position = SDCoordToXY(~,  path, s_coord, d_coord)
             % XY_POSITION = SDCoordToXY( PATH_TO_TRACK, S_COORD, D_COORD)
             % returns the XY_POSITION of a path defined by the S_COORD and
-            % D_COORD and the PATH_TO_TRACK w.r.t. which they are
+            % D_COORD coordinates, and the PATH w.r.t. which they are
             % calculated.
             
-            XY_position = interp1( path_to_track.s_coordinate, path_to_track.coordinates, s_coord);
-            orientation = interp1( path_to_track.s_coordinate, path_to_track.orientation, s_coord);
+            XY_position = interp1( path.s_coordinate, path.coordinates, s_coord);
+            orientation = interp1( path.s_coordinate, path.orientation, s_coord);
             
             if size(s_coord,2)>1
                 XY_position = XY_position + repmat(d_coord,1,1,2).*cat(3,cos(orientation + pi/2), sin(orientation + pi/2));
@@ -873,7 +869,7 @@ classdef utilities
             end
         end
         %
-        function [ax, potential_field, s, d, s_grid, d_grid] = representPotentialFields(ut, varargin)
+        function [ax, potential_field, s, d, s_grid, d_grid] = representPotentialFields(ut, path_to_track, attractive_field, repulsive_field, varargin)
             % [AX, POTENTIAL_FIELD, S, D, S_GRID, D_GRID] =
             % representPotentialFields(UT, PATH_TO_TRACK, ATTRACTIVE_FIELD,
             % REPULSIVE_FIELD) represents the artificial potential field
@@ -881,10 +877,6 @@ classdef utilities
             % REPULSIVE_FIELD passed as input, as well as the
             % PAHT_TO_TRACK. 
             p = inputParser;
-            p.addRequired('path_to_track');
-            p.addRequired('attractive_field');
-            p.addRequired('repulsive_field');
-            
             p.addOptional('plot',true);
             p.addOptional('s_step',1);
             p.addOptional('d_bounds',15);
@@ -892,44 +884,36 @@ classdef utilities
             p.parse(varargin{:});
             args = p.Results;    
                         
-            s = 0:args.s_step:max(args.path_to_track.s_coordinate);
+            s = 0:args.s_step:max(path_to_track.s_coordinate);
             d = -args.d_bounds:args.d_step:args.d_bounds;
             [s_grid, d_grid] = meshgrid(s,d);
             
-            pos_grid = ut.SDCoordToXY( args.path_to_track, s_grid, d_grid);
-            potential_field = -args.attractive_field(s_grid, d_grid) + args.repulsive_field(s_grid, d_grid);
+            pos_grid = ut.SDCoordToXY( path_to_track, s_grid, d_grid);
+            potential_field = -attractive_field(s_grid, d_grid) + repulsive_field(s_grid, d_grid);
             
             ax = [];
             if args.plot
                 ax = gobjects(8,1);
-                
-                figure, ax(1) = axes; surf(args.attractive_field(s_grid, d_grid));
-                figure;ax(2) = axes;surf(args.repulsive_field(s_grid, d_grid));             
-                figure,ax(3) = axes; surf(args.attractive_field(s_grid, d_grid));
+                figure, ax(1) = axes; surf(attractive_field(s_grid, d_grid));
+                figure;ax(2) = axes;surf(repulsive_field(s_grid, d_grid));             
+                figure,ax(3) = axes; surf(attractive_field(s_grid, d_grid));
                 figure,ax(4) = axes('NextPlot','add'); surf(s_grid, d_grid, potential_field);
                 figure;ax(5) = axes('NextPlot','add');contour(pos_grid(:,:,1), pos_grid(:,:,2), potential_field,100,'Parent',ax(5))
-                figure,ax(6) = axes;surf(pos_grid(:,:,1), pos_grid(:,:,2), args.attractive_field(s_grid, d_grid))
-                figure,ax(7) = axes;surf(pos_grid(:,:,1), pos_grid(:,:,2), args.repulsive_field(s_grid, d_grid))
+                figure,ax(6) = axes;surf(pos_grid(:,:,1), pos_grid(:,:,2), attractive_field(s_grid, d_grid))
+                figure,ax(7) = axes;surf(pos_grid(:,:,1), pos_grid(:,:,2), repulsive_field(s_grid, d_grid))
                 figure,ax(8) = axes('NextPlot','add');surf(pos_grid(:,:,1), pos_grid(:,:,2), potential_field);
             end
         end
         %
-        function varargout = obtainMinimumPotentialPath(obj,  varargin)
+        function path_s_d = obtainMinimumPotentialPath(~,initial_pos_s_d, s, d, fs, fd, varargin)
             % [PATH_S_D] = obtainMinimumPotentialPath(INITIAL_POS_S_D, S,
-            % D, FS, FD) returns the PATH_S_D resulting from gradient
-            % descending the potential field resulting from combining the
-            % input ATTRACTIVE_FIELD and REPULSIVE_FIELD. THe function also
-            % requires the S, D, vector showing the grid used to generate
-            % the field terms as well as the gradient FS and FD of the
-            % potential field.           
+            % D, FS, FD) returns the PATH_S_D following the maximum
+            % negative gradient of the potential field resulting from 
+            % combining the input ATTRACTIVE_FIELD and REPULSIVE_FIELD. 
+            % THe function also requires the S, D, vectors showing the grid 
+            % used to generate the field terms as well as the gradient FS 
+            % and FD of the potential field.           
             p = inputParser;
-            
-            p.addRequired('initial_pos_s_d');
-            p.addRequired('s');
-            p.addRequired('d');
-            p.addRequired('fs');
-            p.addRequired('fd');
-            
             p.addOptional('path_points',8000);
             p.addOptional('step_size',0.01);
             p.parse(varargin{:});
@@ -937,26 +921,24 @@ classdef utilities
 
             gradient_data = zeros(args.path_points,2);
             path_s_d = zeros(args.path_points,2);
-            path_s_d(1,:) = args.initial_pos_s_d;
+            path_s_d(1,:) = initial_pos_s_d;
             for counter = 2:args.path_points
-                [~,  col] = min( abs(args.s - path_s_d(counter-1,1)));
-                [~,  row] = min( abs(args.d - path_s_d(counter-1,2)));
+                [~,  col] = min( abs(s - path_s_d(counter-1,1)));
+                [~,  row] = min( abs(d - path_s_d(counter-1,2)));
 
-                gradient_s_d = [ args.fs(row, col), 2*args.fd(row, col) ];
+                gradient_s_d = [ fs(row, col), 2 * fd(row, col) ];
 
                 gradient_data(counter, :) = gradient_data(counter-1, :) + gradient_s_d;
                 path_s_d(counter,:) = path_s_d(counter-1,:) - args.step_size*gradient_s_d;
             end
-            
-            varargout = {path_s_d};
         end        
         %
-        function circular_path = genCircularPath(obj,  curvature)
+        function circular_path = genCircularPath(~,  curvature)
             % circ_path = genCircularPath( curvature)
             % 
             % Returns a structure *circ_path* representing a circular path of
             % curvature *curvature* with fields:
-            %   circ_path.coordinates   : Two columns array [x, y];
+            %   circ_path.coordinates   : Two-columns array [x, y];
             %   circ_path.s_coordinates : Column vector [s]
             %   circ_path.orientation   : Column vector [ori]
             %   circ_path.curvature     : Column vector [curvature]
@@ -967,7 +949,6 @@ classdef utilities
             circular_path.orientation = theta_vector+ pi/2;
             circular_path.curvature = circular_path.orientation *0 + curvature;            
         end
-        
     end
     
 end

@@ -31,4 +31,4 @@ plot(path_to_track.coordinates(:,1),path_to_track.coordinates(:,2));
 
 figure,plot(path_to_track.curvature)
 
-save('/Users/ezequiel/case_study_code/code/path_3.mat','path_to_track')
+save('/Users/ezequiel/case_study_code/code/path_4.mat','path_to_track')

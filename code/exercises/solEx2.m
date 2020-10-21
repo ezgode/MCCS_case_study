@@ -21,20 +21,10 @@ classdef solEx2
             parameters = zeros(5,1);
             %
             parameters(1) = 1e-10;
-            parameters(1) = 0.01;       
-            parameters(1) = 0.1;
-            parameters(1) = 1e-10;
-            
             parameters(2) = 4;       
-            %
-            parameters(3) = 10.7;
-            parameters(3) = 5;
-            
-            parameters(4) = 0.9995;
-            parameters(4) = 1;
-            
-            parameters(5) = 8;
-            parameters(5) = 3;
+            parameters(3) = .8;
+            parameters(4) = 10;
+            parameters(5) = 5;
             varargout = {parameters};
         end
         %
@@ -53,7 +43,7 @@ classdef solEx2
             A(1,4) = 1;
             A(2,3) = parameters(5);
             A(3,2) = -parameters(5)*parameters(1)^2;
-            A(3,5) = parameters(5)*(1+parameters(1)^2*parameters(2)^2)/parameters(2);
+            A(3,5) = parameters(5)*(1+parameters(1)^2*parameters(2)^2)/(16*parameters(2));
             A(4,4) = -parameters(3);
             A(5,5) = -parameters(4);
             %
@@ -123,13 +113,15 @@ classdef solEx2
             % output matrices can be found in the exercise handout. 
             
             %Default values
-            Q1=eye(nStates)*10;
-            Q1(1,1) = 1e-4;
+            Q1 = eye(nStates)*10/2;
+            %Q1(1,1) = 1e-4;
             Q1(1,1) = 1e-5;
+            Q1(2,2) = 50;
             %Q1(2,2) = 30;
             
             % weighting inputs in the cost function
-            Q2=eye(nInputs)*10; 
+            Q2=eye(nInputs)*1; 
+            Q2 = [1 0 ; 0 0.000020];
             %Q2(2,2) = 20;
             
             varargout = {Q1,Q2};
@@ -194,7 +186,7 @@ classdef solEx2
             end
         end
         %        
-        function varargout = select_reference_path
+        function varargout = selectReferencePath
             % OUTPUT = select_reference_path returns a string with the name
             % of the mat file containing the path to be tracked that is
             % wanted to be used. 
@@ -239,7 +231,7 @@ classdef solEx2
                 time_vector*0,...
                 time_vector*0,...
                 time_vector*0+parameters(5),...
-                time_vector*0+atan(parameters(1)*parameters(2))];
+                time_vector*0+16*atan(parameters(1)*parameters(2))];
             nominal_trajectory_u = [time_vector, nominal_trajectory_x(:,5), nominal_trajectory_x(:,6)];
             
             varargout = {nominal_trajectory_x, nominal_trajectory_u};
@@ -260,7 +252,7 @@ classdef solEx2
             % the system.
             
             x0 = [0, 0, 0, 0,0]';
-            x0 = [0, 0, 0, 3, atan(1e-10*4)]';
+            %x0 = [0, 0, 0, 3, atan(1e-10*4)]';
             
             x0Tilde = x0 - ntX(1,2:end)';
             x0Obs = zeros(5,1);
@@ -297,40 +289,40 @@ classdef solEx2
             noise.std_deviation = [1; 1; deg2rad(10); 2; 0];
             
             noise.mean = [0; 0; 0; 0; 0];
-            noise.std_deviation = [.2; .2; 2; 0.1; 0.1]/2;
-            
-            noise.seed = rand(5,1);
+            %noise.std_deviation = [1; 1; .2; 0.1; 0.1]/5;
+            noise.std_deviation = [.5, .5, .04, 1, .02];
+            noise.std_deviation = [.2, .2, .04, .02, .02];
+            noise.seed = randi(10,5,1);
             noise.freq = 50;
             varargout = {noise};
         end        
         %        
-        function varargout = getCprime
-            % CPRIME = getCprime(obj)
-            % returns a third version of the matric C (called CPRIME) which
-            % will multiply to the state vector before feeding the control
-            % gain. In this way, we would easily simulate the consequences
-            % of, after having designed a LQR which works with the full
-            % state vector, not having the information regarding some of
-            % the states. 
+        function varargout = getWorkingSensor
+            % working_sensor = getWorkingSensor(obj)
+            % returns a column vector, whose elements (i,1) represents 
+            % whether the sensor measuring the state i works correctly
+            % (value 1), or not (value 0);
             %
-            % Notice that CPRIME must have the same dimensions than C and
-            % the elements on the row corresponding to the state that is
-            % wanted to consider missing equal to zero.
+            % It must have as many elements as number of states.
             %
-            %            
-            Cprime = eye(5);
-            Cprime(3,:) = 0;
-            varargout = {Cprime};
+            varargout = {[1;1;0;1;1]};
         end
         %        
-        function varargout = getCArrayConsideringMeasurableStates(C)
-            % [CMES,COBS,DOBS] = getCArrayConsideringMeasurableStates(C)
-            % returns matrices CMES, COBS, and DOBS, which are needed to
+        function varargout = updateCArray(C)
+            % C = updateCArray(C)
+            % takes as input the C array you originally defined in function
+            % 'getLinealModelArrays' and returns a new C array to make the
+            % output of the system contain only a subset of states. 
+            
+            %            
+            varargout = {C([1 2 4 5],:)};
+            %varargout = {C([1 3 4 5],:)};
+        end
+        %
+        function varargout = getArrayDefiningObserverOutput(C)
+            % [COBS,DOBS] = getArrayDefiningObserverOutput(C)
+            % returns matrices COBS, and DOBS, which are needed to
             % implement the observer and have to be calculated from C. 
-            %
-            % Output CMES is a version of the C matrix with some rows
-            % ommited, which represents the assumption that the states
-            % corresponding to the ommited rows are not measurable. 
             %
             % The output matrices COBS and DOBS are used in the 'Observer'
             % block in the simulink model 'LQR_observer'. Go and explore
@@ -340,18 +332,14 @@ classdef solEx2
             % Moreover, CObs and DObs should be constructed following the
             % approach presented in the solution of exercise 6.6.1 - 3
             %
-            %CMes = C([1 2 4 5],:);
-            %CMes = C([1 3 4 5],:);
-            CMes = C([1 2 4 5],:);
-            %CMes = C([1 2 3 5],:);
-            %CMes = C;
             %
-            nObsState = size(CMes,1);
+            %nObsState = size(C,1);
+            nObsState = size(C,1);
             nInputs = 2;
             CObs = eye(5);
             DObs = zeros(5,nObsState + nInputs);
-            
-            varargout = {CMes,CObs,DObs};
+            %
+            varargout = {CObs,DObs};
         end
         %
         function varargout = checkObservability(Phi,CMes)
@@ -414,18 +402,10 @@ classdef solEx2
             % cells gathering as many instances of the observer gain as
             % experiments are wanted to be run.
             %
-            gains = [0.3 0.5 0.8];
-            gains = [0.3 0.8];
-            %gains = [0.99];
-            %gains = [0.2];
-            %gains = [0.999];
-            selected_poles = cell(length(gains),1);
-            L = cell(length(gains),1);
             
-            for i = 1:length(gains)
-                selected_poles{i,1} = gains(i)*eig(Phi-Gamma*lqr_K);
-                L{i,1} = place(Phi',c_meassurable',selected_poles{i,1})';
-            end
+            gains = [1;1;1;1;1]*.5;
+            selected_poles = gains .* eig(Phi-Gamma*lqr_K);
+            L = place(Phi',c_meassurable',selected_poles)';
             
             varargout = {L, selected_poles};
         end
