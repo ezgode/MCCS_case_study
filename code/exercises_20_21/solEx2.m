@@ -12,14 +12,13 @@ classdef solEx2
             % matrices Q1 and Q2 defining the LQR's cost function. 
             
             %Default values
-            Q1 = eye(nStates)*10/2;
+            Q1 = eye(5)*10/2;
             %Q1(1,1) = 1e-4;
             Q1(1,1) = 1e-5;
             Q1(2,2) = 50;
             %Q1(2,2) = 30;
             
             % weighting inputs in the cost function
-            Q2=eye(nInputs)*1; 
             Q2 = [1 0 ; 0 0.000020];
         end
         %        
@@ -159,7 +158,7 @@ classdef solEx2
             CObs = eye(5);
             DObs = zeros(5,nObsState + nInputs);
             %
-            AObs = Phi-L*C;
+            AObs = Phi-L*Cprime;
             BObs = [Gam L];
         end
     end
